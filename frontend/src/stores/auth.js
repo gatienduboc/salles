@@ -7,6 +7,14 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(JSON.parse(localStorage.getItem('user') || 'null'));
 
   const isLoggedIn = computed(() => !!token.value);
+  const isAdmin = computed(() => user.value?.role === 'admin');
+
+  async function refreshUser() {
+    if (!token.value) return;
+    const me = await api('/auth/me');
+    user.value = me;
+    persist();
+  }
 
   function persist() {
     if (token.value) {
@@ -47,5 +55,5 @@ export const useAuthStore = defineStore('auth', () => {
     api('/auth/logout', { method: 'POST' }).catch(() => {});
   }
 
-  return { token, user, isLoggedIn, register, login, logout };
+  return { token, user, isLoggedIn, isAdmin, register, login, logout, refreshUser };
 });

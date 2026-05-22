@@ -2,7 +2,9 @@ import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import { body, validationResult } from 'express-validator';
 import { db } from '../db/knex.js';
+import { config } from '../config/index.js';
 import { signToken } from '../utils/jwt.js';
+import { authenticateJWT } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -26,7 +28,8 @@ router.post('/auth/register', registerRules, async (req, res, next) => {
     }
 
     const password_hash = await bcrypt.hash(password, 10);
-    const [id] = await db('users').insert({ email, password_hash, pseudo });
+    const role = email === config.adminEmail ? 'admin' : 'user';
+    const [id] = await db('users').insert({ email, password_hash, pseudo, role });
 
     const user = await db('users').where({ id }).first();
     const token = signToken(user);
@@ -63,6 +66,21 @@ router.post('/auth/login', async (req, res, next) => {
 
 router.post('/auth/logout', (req, res) => {
   res.status(204).send();
+});
+
+router.get('/auth/me', authenticateJWT, async (req, res, next) => {
+  try {
+    const user = await db('users').where({ id: req.user.id }).first();
+    if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
+    res.json({
+      id: user.id,
+      email: user.email,
+      pseudo: user.pseudo,
+      role: user.role,
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 export default router;

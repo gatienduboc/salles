@@ -8,6 +8,7 @@ import healthRouter from './routes/health.js';
 import authRouter from './routes/auth.js';
 import lieuxRouter from './routes/lieux.js';
 import photosRouter from './routes/photos.js';
+import adminRouter from './routes/admin.js';
 
 export async function createApp(options = {}) {
   await fs.mkdir(config.uploadDir, { recursive: true });
@@ -25,6 +26,7 @@ export async function createApp(options = {}) {
   app.use(authRouter);
   app.use(lieuxRouter);
   app.use(photosRouter);
+  app.use(adminRouter);
 
   app.use(errorHandler);
   return app;

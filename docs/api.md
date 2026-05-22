@@ -96,6 +96,25 @@ Booléens : `true`, `false` ou `null` (inconnu).
 
 `auteur_id` : renseigné automatiquement à la création.
 
+## Administration (JWT + rôle `admin`)
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/admin/stats` | Tableau de bord |
+| GET | `/admin/users` | Liste utilisateurs |
+| POST | `/admin/users` | Créer un compte |
+| PATCH | `/admin/users/:id` | Modifier pseudo, email, rôle |
+| PATCH | `/admin/users/:id/password` | Réinitialiser MDP |
+| DELETE | `/admin/users/:id` | Supprimer (si 0 fiche) |
+| GET | `/admin/lieux` | Liste (filtres + `sans_coords`, `geocode_error`) |
+| PATCH | `/admin/lieux/bulk` | `{ ids, patch: { type?, auteur_id? } }` max 50 |
+| DELETE | `/admin/lieux/bulk` | `{ ids }` max 50 |
+| POST | `/admin/geocode/bulk` | `{ ids? }` ou lot sans coords (50 max) |
+
+`GET /auth/me` — profil courant (inclut `role`).
+
+Compte admin initial : email `ADMIN_EMAIL` (défaut `gatien.duboc@gmail.com`), promu par migration.
+
 ## Photos
 
 | Méthode | Route | Auth |

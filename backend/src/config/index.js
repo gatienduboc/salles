@@ -26,4 +26,5 @@ export const config = {
     /\/api\/?$/,
     ''
   ),
+  adminEmail: (process.env.ADMIN_EMAIL || 'gatien.duboc@gmail.com').toLowerCase(),
 };

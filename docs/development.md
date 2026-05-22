@@ -31,6 +31,13 @@ docker compose -f docker-compose.dev.yml exec backend npx knex seed:run
 
 Compte démo : `demo@salles.local` / `password123`
 
+### Administration
+
+- Email admin (`.env` `ADMIN_EMAIL`, défaut `gatien.duboc@gmail.com`) : promu via migration `004_promote_admin`
+- Interface : `/admin` (tableau de bord, utilisateurs, salles avec actions en masse)
+- Édition **unitaire** d’une fiche : tout utilisateur connecté (inchangé)
+- Éditions **en masse** : admin uniquement (`PATCH/DELETE /admin/lieux/bulk`, `POST /admin/geocode/bulk`)
+
 ### Jeu de données Alsace / Est (notes terrain)
 
 ```bash

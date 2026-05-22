@@ -1,6 +1,8 @@
 import { config } from '../config/index.js';
 import { db } from '../db/knex.js';
 
+const MAP_MAX = 500;
+
 const LIEU_FIELDS = [
   'nom',
   'adresse',
@@ -17,6 +19,14 @@ const LIEU_FIELDS = [
   'date_dernier_evenement',
   'type',
 ];
+
+const SORT_COLUMNS = {
+  nom: 'lieux.nom',
+  ville: 'lieux.ville',
+  created_at: 'lieux.created_at',
+  updated_at: 'lieux.updated_at',
+  date_dernier_evenement: 'lieux.date_dernier_evenement',
+};
 
 const LIEU_COLUMNS = [
   'lieux.id',
@@ -96,6 +106,17 @@ export function formatLieu(row, photos = []) {
   };
 }
 
+export function formatLieuMapMarker(row) {
+  return {
+    id: row.id,
+    nom: row.nom,
+    type: row.type,
+    ville: row.ville,
+    latitude: Number(row.latitude),
+    longitude: Number(row.longitude),
+  };
+}
+
 function applyFilters(q, query, { includeType = true } = {}) {
   if (includeType && query.type) {
     q = q.where('lieux.type', query.type);
@@ -103,13 +124,44 @@ function applyFilters(q, query, { includeType = true } = {}) {
   if (query.ville) {
     q = q.where('lieux.ville', 'like', `%${query.ville}%`);
   }
+  if (query.code_postal) {
+    q = q.where('lieux.code_postal', 'like', `${query.code_postal}%`);
+  }
   if (query.search) {
     const term = `%${query.search}%`;
     q = q.where((builder) => {
       builder.where('lieux.nom', 'like', term).orWhere('lieux.adresse', 'like', term);
     });
   }
+  if (query.auteur_id) {
+    q = q.where('lieux.auteur_id', query.auteur_id);
+  }
+  if (query.has_coords === 'true' || query.has_coords === '1') {
+    q = q.whereNotNull('lieux.latitude').whereNotNull('lieux.longitude');
+  }
   return q;
+}
+
+export function parseSort(query) {
+  const sort = SORT_COLUMNS[query.sort] ? query.sort : 'updated_at';
+  const order = query.order === 'asc' ? 'asc' : 'desc';
+  return { sort, order, column: SORT_COLUMNS[sort] };
+}
+
+function buildListMeta({ page, limit, total, sort, order, counts }) {
+  const totalPages = Math.max(1, Math.ceil(total / limit) || 1);
+  const safePage = Math.min(page, totalPages);
+  return {
+    page: safePage,
+    limit,
+    total,
+    totalPages,
+    hasPrev: safePage > 1,
+    hasNext: safePage < totalPages,
+    sort,
+    order,
+    counts,
+  };
 }
 
 export async function fetchLieuById(id) {
@@ -135,7 +187,7 @@ export async function listLieux(knexDb, query) {
   const page = Math.max(1, parseInt(query.page, 10) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 20));
   const offset = (page - 1) * limit;
-  const sortCol = query.sort === 'nom' ? 'lieux.nom' : 'lieux.updated_at';
+  const { sort, order, column } = parseSort(query);
 
   let q = knexDb('lieux')
     .leftJoin('users', 'lieux.auteur_id', 'users.id')
@@ -143,12 +195,47 @@ export async function listLieux(knexDb, query) {
   q = applyFilters(q, query);
 
   const countQuery = q.clone().clearSelect().count({ total: '*' }).first();
-  const rows = await q.orderBy(sortCol, query.sort === 'nom' ? 'asc' : 'desc').limit(limit).offset(offset);
+  const rows = await q.orderBy(column, order).limit(limit).offset(offset);
   const { total } = await countQuery;
   const counts = await getCounts(query);
+  const totalNum = Number(total);
 
   return {
     data: rows.map((r) => formatLieu(r, [])),
-    meta: { page, limit, total: Number(total), counts },
+    meta: buildListMeta({ page, limit, total: totalNum, sort, order, counts }),
+  };
+}
+
+export async function listLieuxForMap(knexDb, query) {
+  const { column, order, sort } = parseSort(query);
+
+  let q = knexDb('lieux')
+    .select(
+      'lieux.id',
+      'lieux.nom',
+      'lieux.type',
+      'lieux.ville',
+      'lieux.latitude',
+      'lieux.longitude'
+    )
+    .whereNotNull('lieux.latitude')
+    .whereNotNull('lieux.longitude');
+  q = applyFilters(q, query);
+
+  const countQuery = q.clone().count({ total: '*' }).first();
+  const rows = await q.orderBy(column, order).limit(MAP_MAX);
+  const { total } = await countQuery;
+  const totalNum = Number(total);
+
+  return {
+    data: rows.map(formatLieuMapMarker),
+    meta: {
+      total: totalNum,
+      returned: rows.length,
+      capped: totalNum > MAP_MAX,
+      max: MAP_MAX,
+      sort,
+      order,
+    },
   };
 }

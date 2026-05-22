@@ -11,6 +11,7 @@ import {
   pickLieuBody,
   formatLieu,
   listLieux,
+  listLieuxForMap,
   fetchLieuById,
 } from '../services/lieux.js';
 import fs from 'fs/promises';
@@ -29,6 +30,15 @@ async function getLieuWithPhotos(id) {
 router.get('/lieux', async (req, res, next) => {
   try {
     const result = await listLieux(db, req.query);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/lieux/map', async (req, res, next) => {
+  try {
+    const result = await listLieuxForMap(db, req.query);
     res.json(result);
   } catch (err) {
     next(err);

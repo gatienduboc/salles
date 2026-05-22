@@ -22,42 +22,58 @@ Base URL : `http://localhost:3000` (dev) ou `https://salle.example.fr/api` (prod
 | Méthode | Route | Auth |
 |---------|-------|------|
 | GET | `/lieux` | Non |
+| GET | `/lieux/map` | Non |
 | GET | `/lieux/:id` | Non |
 | POST | `/lieux` | JWT |
 | PUT | `/lieux/:id` | JWT |
 | DELETE | `/lieux/:id` | JWT |
 | POST | `/lieux/:id/geocode` | JWT |
 
-### GET /lieux — query params
+### GET /lieux — liste paginée
 
-- `type` : `blacklist` | `favori` (filtre exclusif)
-- `ville`, `search`, `page`, `limit` (max 100)
-- `sort` : `updated_at` (défaut) | `nom`
+Query params :
 
-Réponse :
+| Param | Description |
+|-------|-------------|
+| `type` | `blacklist` \| `favori` |
+| `ville` | Filtre ville (LIKE) |
+| `search` | Nom ou adresse (LIKE) |
+| `code_postal` | Préfixe code postal |
+| `auteur_id` | ID utilisateur auteur |
+| `has_coords` | `true` — uniquement géocodés |
+| `page` | Page (défaut 1) |
+| `limit` | Taille page 1–100 (défaut 20) |
+| `sort` | `updated_at`, `created_at`, `nom`, `ville`, `date_dernier_evenement` |
+| `order` | `asc` \| `desc` (défaut `desc`) |
+
+Réponse `meta` :
 
 ```json
 {
-  "data": [{
-    "id": 1,
-    "nom": "...",
-    "adresse": "...",
-    "type": "favori",
-    "auteur": { "id": 1, "pseudo": "Demo" },
-    "fumee_interdite": null,
-    "db_limite": 95,
-    "photos": []
-  }],
-  "meta": {
-    "page": 1,
-    "limit": 20,
-    "total": 5,
-    "counts": { "blacklist": 2, "favori": 3 }
-  }
+  "page": 2,
+  "limit": 20,
+  "total": 45,
+  "totalPages": 3,
+  "hasPrev": true,
+  "hasNext": true,
+  "sort": "nom",
+  "order": "asc",
+  "counts": { "blacklist": 20, "favori": 25 }
 }
 ```
 
-`counts` : totaux par type (hors filtre `type`, mais avec `ville` / `search`).
+### GET /lieux/map — carte (tous les points filtrés)
+
+Mêmes filtres que la liste (`type`, `ville`, `search`, etc.) + `sort` / `order`. **Sans** pagination.
+
+Retourne uniquement les lieux avec coordonnées. Plafond 500 (`meta.capped` si dépassement).
+
+```json
+{
+  "data": [{ "id": 1, "nom": "...", "type": "favori", "ville": "Lyon", "latitude": 45.75, "longitude": 4.85 }],
+  "meta": { "total": 120, "returned": 120, "capped": false, "max": 500 }
+}
+```
 
 ### POST /lieux — obligatoire
 
@@ -81,8 +97,8 @@ Booléens : `true`, `false` ou `null` (inconnu).
 ## Exemples curl
 
 ```bash
-curl -s "http://localhost:3000/lieux?type=favori"
-curl -s "http://localhost:3000/lieux?type=blacklist"
+curl -s "http://localhost:3000/lieux?type=favori&sort=nom&order=asc&page=1&limit=10"
+curl -s "http://localhost:3000/lieux/map?type=favori&ville=Lyon"
 curl -s -X POST http://localhost:3000/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"demo@salles.local","password":"password123"}'

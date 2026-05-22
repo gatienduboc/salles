@@ -28,6 +28,46 @@ describe('Lieux API', () => {
     expect(res.body.data[0]).toHaveProperty('auteur');
   });
 
+  it('tri nom asc et meta pagination', async () => {
+    const { user } = await createUser();
+    await createLieu(user.id, { nom: 'Zebra', type: 'blacklist', adresse: 'Z' });
+    await createLieu(user.id, { nom: 'Alpha', type: 'blacklist', adresse: 'A' });
+
+    const res = await request(app)
+      .get('/lieux')
+      .query({ sort: 'nom', order: 'asc', limit: 2, page: 1 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.meta.sort).toBe('nom');
+    expect(res.body.meta.order).toBe('asc');
+    expect(res.body.meta.totalPages).toBeGreaterThanOrEqual(1);
+    expect(res.body.data[0].nom).toBe('Alpha');
+  });
+
+  it('GET /lieux/map retourne les coords filtrées', async () => {
+    const { user } = await createUser();
+    await createLieu(user.id, {
+      nom: 'MapOk',
+      type: 'favori',
+      adresse: 'Lyon',
+      latitude: 45.75,
+      longitude: 4.85,
+    });
+    await createLieu(user.id, {
+      nom: 'SansCoords',
+      type: 'favori',
+      adresse: 'X',
+      latitude: null,
+      longitude: null,
+    });
+
+    const res = await request(app).get('/lieux/map').query({ type: 'favori' });
+    expect(res.status).toBe(200);
+    expect(res.body.data.every((l) => l.latitude != null)).toBe(true);
+    expect(res.body.data.some((l) => l.nom === 'MapOk')).toBe(true);
+    expect(res.body.data.some((l) => l.nom === 'SansCoords')).toBe(false);
+  });
+
   it('filtre type favori et meta.counts', async () => {
     const { user } = await createUser();
     await createLieu(user.id, { nom: 'Mauvais', type: 'blacklist', adresse: 'A' });

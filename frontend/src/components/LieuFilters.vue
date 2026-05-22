@@ -1,5 +1,6 @@
 <script setup>
 import { LIEU_TYPES } from '../constants/lieuTypes.js';
+import { SORT_OPTIONS, LIMIT_OPTIONS } from '../utils/lieuQuery.js';
 
 const model = defineModel({ type: Object, required: true });
 const props = defineProps({
@@ -16,6 +17,12 @@ const tabs = [
 
 function selectType(value) {
   model.value.type = value;
+  model.value.page = 1;
+  emit('apply');
+}
+
+function apply() {
+  model.value.page = 1;
   emit('apply');
 }
 
@@ -36,7 +43,12 @@ function tabCount(value) {
         v-for="tab in tabs"
         :key="tab.value"
         type="button"
-        :class="['type-tab', tab.value === 'favori' && 'tab-favori', tab.value === 'blacklist' && 'tab-blacklist', model.type === tab.value && 'active']"
+        :class="[
+          'type-tab',
+          tab.value === 'favori' && 'tab-favori',
+          tab.value === 'blacklist' && 'tab-blacklist',
+          model.type === tab.value && 'active',
+        ]"
         @click="selectType(tab.value)"
       >
         {{ tab.label }}
@@ -44,12 +56,46 @@ function tabCount(value) {
       </button>
     </div>
 
-    <label>Ville</label>
-    <input v-model="model.ville" placeholder="Paris, Lyon…" data-testid="filter-ville" @keyup.enter="emit('apply')" />
+    <div class="filter-row">
+      <div class="filter-field">
+        <label>Ville</label>
+        <input
+          v-model="model.ville"
+          placeholder="Paris, Lyon…"
+          data-testid="filter-ville"
+          @keyup.enter="apply"
+        />
+      </div>
+      <div class="filter-field">
+        <label>Recherche</label>
+        <input v-model="model.search" placeholder="Nom ou adresse" @keyup.enter="apply" />
+      </div>
+    </div>
 
-    <label>Recherche</label>
-    <input v-model="model.search" placeholder="Nom ou adresse" @keyup.enter="emit('apply')" />
+    <div class="filter-row">
+      <div class="filter-field">
+        <label>Tri</label>
+        <select v-model="model.sort" @change="apply">
+          <option v-for="opt in SORT_OPTIONS" :key="opt.value" :value="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label>Ordre</label>
+        <select v-model="model.order" @change="apply">
+          <option value="desc">Décroissant</option>
+          <option value="asc">Croissant</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label>Par page</label>
+        <select v-model.number="model.limit" @change="apply">
+          <option v-for="n in LIMIT_OPTIONS" :key="n" :value="n">{{ n }}</option>
+        </select>
+      </div>
+    </div>
 
-    <button class="btn" @click="emit('apply')">Appliquer filtres</button>
+    <button class="btn" type="button" @click="apply">Appliquer filtres</button>
   </div>
 </template>

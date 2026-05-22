@@ -51,11 +51,30 @@ paths:
         - { name: type, in: query, schema: { type: string, enum: [blacklist, favori] } }
         - { name: ville, in: query, schema: { type: string } }
         - { name: search, in: query, schema: { type: string } }
+        - { name: code_postal, in: query, schema: { type: string } }
+        - { name: auteur_id, in: query, schema: { type: integer } }
+        - { name: has_coords, in: query, schema: { type: boolean } }
         - { name: page, in: query, schema: { type: integer } }
-        - { name: limit, in: query, schema: { type: integer } }
+        - { name: limit, in: query, schema: { type: integer, maximum: 100 } }
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [updated_at, created_at, nom, ville, date_dernier_evenement]
+        - { name: order, in: query, schema: { type: string, enum: [asc, desc] } }
       responses:
         '200':
-          description: OK
+          description: Liste paginée avec meta (totalPages, hasPrev, hasNext, counts)
+  /lieux/map:
+    get:
+      summary: Points carte (filtres sans pagination, max 500)
+      parameters:
+        - { name: type, in: query, schema: { type: string, enum: [blacklist, favori] } }
+        - { name: ville, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: Lieux avec latitude/longitude
     post:
       summary: Créer un lieu
       security: [{ bearerAuth: [] }]

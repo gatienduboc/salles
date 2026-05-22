@@ -22,7 +22,7 @@ Base URL : `http://localhost:3000` (dev) ou `https://salle.example.fr/api` (prod
 | Méthode | Route | Auth |
 |---------|-------|------|
 | GET | `/lieux` | Non |
-| GET | `/lieux/map` | Non |
+| GET | `/lieux/map` | Optionnel (note perso) |
 | GET | `/lieux/auteurs` | Non |
 | GET | `/lieux/:id` | Non |
 | POST | `/lieux` | JWT |
@@ -84,10 +84,23 @@ Retourne uniquement les lieux avec coordonnées. Plafond 500 (`meta.capped` si d
 
 ```json
 {
-  "data": [{ "id": 1, "nom": "...", "type": "favori", "ville": "Lyon", "latitude": 45.75, "longitude": 4.85 }],
+  "data": [{
+    "id": 1,
+    "nom": "...",
+    "type": "favori",
+    "ville": "Lyon",
+    "adresse": "...",
+    "commentaire": "extrait tronqué…",
+    "photo_url": "https://…/uploads/photo.jpg",
+    "latitude": 45.75,
+    "longitude": 4.85,
+    "rating": { "average": 5, "count": 0, "baseline": 5 }
+  }],
   "meta": { "total": 120, "returned": 120, "capped": false, "max": 500 }
 }
 ```
+
+Aperçu carte côté front : tooltip au survol (photo, adresse, note, extrait commentaire).
 
 ### POST /lieux — obligatoire
 

@@ -1,8 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 
 const { circleMarkerMock } = vi.hoisted(() => ({
-  circleMarkerMock: vi.fn(() => ({ bindPopup: vi.fn() })),
+  circleMarkerMock: vi.fn(() => ({
+    bindPopup: vi.fn(),
+    bindTooltip: vi.fn(),
+    on: vi.fn(),
+    setStyle: vi.fn(),
+    openTooltip: vi.fn(),
+    closeTooltip: vi.fn(),
+  })),
 }));
 
 vi.mock('leaflet', () => {
@@ -30,7 +37,7 @@ describe('LieuMap', () => {
     circleMarkerMock.mockClear();
   });
 
-  it('monte la carte avec légende', () => {
+  it('monte la carte avec légende', async () => {
     const wrapper = mount(LieuMap, {
       props: {
         lieux: [
@@ -38,8 +45,10 @@ describe('LieuMap', () => {
         ],
       },
     });
+    await flushPromises();
     expect(wrapper.find('[data-testid="lieu-map"]').exists()).toBe(true);
-    expect(wrapper.find('.map-legend').text()).toContain('Recommandé');
+    expect(wrapper.find('.map-legend-hint').text()).toContain('aperçu');
+    expect(wrapper.find('.lieu-map-root-tall').exists()).toBe(false);
   });
 
   it('affiche les libellés à éviter et recommandé', () => {

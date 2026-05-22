@@ -106,14 +106,26 @@ export function formatLieu(row, photos = []) {
   };
 }
 
-export function formatLieuMapMarker(row) {
+function truncateText(text, maxLen) {
+  if (!text) return null;
+  const s = String(text).trim();
+  if (s.length <= maxLen) return s;
+  return `${s.slice(0, maxLen - 1)}…`;
+}
+
+export function formatLieuMapMarker(row, photo = null) {
   return {
     id: row.id,
     nom: row.nom,
     type: row.type,
     ville: row.ville,
+    adresse: row.adresse,
+    commentaire: truncateText(row.commentaire, 160),
     latitude: Number(row.latitude),
     longitude: Number(row.longitude),
+    photo_url: photo
+      ? `${config.sitePublicUrl}/uploads/${photo.filename}`
+      : null,
   };
 }
 
@@ -247,6 +259,8 @@ export async function listLieuxForMap(knexDb, query) {
       'lieux.nom',
       'lieux.type',
       'lieux.ville',
+      'lieux.adresse',
+      'lieux.commentaire',
       'lieux.latitude',
       'lieux.longitude'
     )
@@ -259,8 +273,20 @@ export async function listLieuxForMap(knexDb, query) {
   const { total } = await countQuery;
   const totalNum = Number(total);
 
+  const ids = rows.map((r) => r.id);
+  const photoByLieu = {};
+  if (ids.length) {
+    const photoRows = await knexDb('photos')
+      .whereIn('lieu_id', ids)
+      .orderBy('created_at', 'asc')
+      .select('lieu_id', 'filename');
+    for (const p of photoRows) {
+      if (!photoByLieu[p.lieu_id]) photoByLieu[p.lieu_id] = p;
+    }
+  }
+
   return {
-    data: rows.map(formatLieuMapMarker),
+    data: rows.map((r) => formatLieuMapMarker(r, photoByLieu[r.id])),
     meta: {
       total: totalNum,
       returned: rows.length,

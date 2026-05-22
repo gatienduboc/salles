@@ -102,12 +102,15 @@ watch(
     @apply="applyFilters"
   />
 
-  <div class="card">
-    <h2>Carte</h2>
+  <div class="card map-card">
+    <div class="map-card-head">
+      <h2>Carte</h2>
+      <span class="map-card-meta">{{ mapMeta.returned }} lieu(x) affiché(s)</span>
+    </div>
     <p v-if="mapMeta.capped" class="map-cap-note">
       Carte limitée aux {{ mapMeta.returned }} premiers lieux géocodés ({{ mapMeta.total }} au total).
     </p>
-    <LieuMap :lieux="mapLieux" />
+    <LieuMap :lieux="mapLieux" tall />
   </div>
 
   <p v-if="loading">Chargement…</p>

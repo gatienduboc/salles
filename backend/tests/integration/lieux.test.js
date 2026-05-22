@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { getTestApp } from '../helpers/app.js';
-import { resetDatabase, closeDatabase } from '../helpers/db.js';
+import { resetDatabase, closeDatabase, testDb } from '../helpers/db.js';
 import { createUser, createLieu } from '../helpers/factory.js';
 
 describe('Lieux API', () => {
@@ -85,6 +85,36 @@ describe('Lieux API', () => {
     expect(res.body.data.every((l) => l.latitude != null)).toBe(true);
     expect(res.body.data.some((l) => l.nom === 'MapOk')).toBe(true);
     expect(res.body.data.some((l) => l.nom === 'SansCoords')).toBe(false);
+  });
+
+  it('GET /lieux/map inclut aperçu (adresse, commentaire, photo, note)', async () => {
+    const { user, token } = await createUser();
+    const lieu = await createLieu(user.id, {
+      nom: 'PreviewMap',
+      type: 'favori',
+      adresse: '10 rue Aperçu',
+      commentaire: 'Super salle pour danser',
+      latitude: 48.1,
+      longitude: 7.2,
+    });
+    await testDb('photos').insert({ lieu_id: lieu.id, filename: 'preview.jpg' });
+    await testDb('lieu_ratings').insert({
+      lieu_id: lieu.id,
+      user_id: user.id,
+      stars: 8,
+      value: 1,
+    });
+
+    const res = await request(app)
+      .get('/lieux/map')
+      .query({ search: 'PreviewMap' })
+      .set('Authorization', `Bearer ${token}`);
+    const row = res.body.data.find((l) => l.nom === 'PreviewMap');
+    expect(row.adresse).toBe('10 rue Aperçu');
+    expect(row.commentaire).toContain('Super salle');
+    expect(row.photo_url).toContain('preview.jpg');
+    expect(row.rating.average).toBe(8);
+    expect(row.rating.user_stars).toBe(8);
   });
 
   it('filtre type favori et meta.counts', async () => {

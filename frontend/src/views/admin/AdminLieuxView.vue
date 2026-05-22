@@ -20,7 +20,6 @@ const filters = ref({
   search: '',
   auteur_id: '',
   sans_coords: false,
-  geocode_error: false,
 });
 
 const bulkType = ref('blacklist');
@@ -40,8 +39,7 @@ function syncFiltersFromRoute() {
     type: typeof q.type === 'string' ? q.type : '',
     search: typeof q.search === 'string' ? q.search : '',
     auteur_id: q.auteur_id ? parseInt(q.auteur_id, 10) || '' : '',
-    sans_coords: q.sans_coords === '1',
-    geocode_error: q.geocode_error === '1',
+    sans_coords: q.sans_coords === '1' || q.geocode_error === '1',
   };
 }
 
@@ -51,7 +49,6 @@ function buildQuery(page = 1) {
   if (filters.value.search) params.set('search', filters.value.search);
   if (filters.value.auteur_id) params.set('auteur_id', String(filters.value.auteur_id));
   if (filters.value.sans_coords) params.set('sans_coords', '1');
-  if (filters.value.geocode_error) params.set('geocode_error', '1');
   return params.toString();
 }
 
@@ -61,7 +58,6 @@ function applyRoute(page = 1) {
   if (filters.value.search) q.search = filters.value.search;
   if (filters.value.auteur_id) q.auteur_id = String(filters.value.auteur_id);
   if (filters.value.sans_coords) q.sans_coords = '1';
-  if (filters.value.geocode_error) q.geocode_error = '1';
   if (page > 1) q.page = String(page);
   router.push({ query: q });
 }
@@ -175,11 +171,7 @@ watch(
       <input v-model="filters.search" placeholder="Recherche" @keyup.enter="applyRoute(1)" />
       <label class="admin-check-label">
         <input v-model="filters.sans_coords" type="checkbox" @change="applyRoute(1)" />
-        Sans coords
-      </label>
-      <label class="admin-check-label">
-        <input v-model="filters.geocode_error" type="checkbox" @change="applyRoute(1)" />
-        Erreur géo
+        Non géolocalisées
       </label>
       <button class="btn secondary" type="button" @click="applyRoute(1)">Filtrer</button>
     </div>
@@ -241,9 +233,13 @@ watch(
             <td>{{ l.auteur?.pseudo || '—' }}</td>
             <td>{{ l.ville || '—' }}</td>
             <td>
-              <span v-if="l.geocode_error" class="admin-warn">✗</span>
-              <span v-else-if="l.latitude">✓</span>
-              <span v-else>—</span>
+              <span
+                v-if="l.geocode_error"
+                class="admin-warn"
+                :title="l.geocode_error"
+              >✗</span>
+              <span v-else-if="l.latitude != null && l.longitude != null" title="Géolocalisé">✓</span>
+              <span v-else title="Pas encore géolocalisé">—</span>
             </td>
             <td class="admin-actions">
               <RouterLink :to="`/lieux/${l.id}`">Voir</RouterLink>

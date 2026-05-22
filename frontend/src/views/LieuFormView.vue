@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { api } from '../api/client.js';
 import { useAuthStore } from '../stores/auth.js';
 import TriStateBool from '../components/TriStateBool.vue';
+import AdresseAutocomplete from '../components/AdresseAutocomplete.vue';
 import { LIEU_TYPES } from '../constants/lieuTypes.js';
 
 const auth = useAuthStore();
@@ -97,8 +98,11 @@ async function submit() {
     <label>Nom *</label>
     <input v-model="form.nom" required />
 
-    <label>Adresse *</label>
-    <input v-model="form.adresse" required />
+    <label for="lieu-adresse">Adresse *</label>
+    <AdresseAutocomplete id="lieu-adresse" v-model="form.adresse" required />
+    <p v-if="!isEdit" class="adresse-form-note">
+      Choisissez une suggestion pour faciliter le géocodage sur la carte.
+    </p>
 
     <h2 class="form-section">Type de fiche</h2>
     <div class="type-radios">

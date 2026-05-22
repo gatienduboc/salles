@@ -33,16 +33,12 @@ onMounted(async () => {
           <small>{{ stats.lieux.favori }} recomm. / {{ stats.lieux.blacklist }} à éviter</small>
         </div>
         <div class="card admin-stat">
-          <span class="admin-stat-label">Sans coordonnées</span>
+          <span class="admin-stat-label">Non géolocalisées</span>
           <strong>{{ stats.lieux.sans_coords }}</strong>
+          <small v-if="stats.lieux.geocode_error">
+            dont {{ stats.lieux.geocode_error }} échec(s) de géocodage
+          </small>
           <RouterLink v-if="stats.lieux.sans_coords" to="/admin/lieux?sans_coords=1">Gérer →</RouterLink>
-        </div>
-        <div class="card admin-stat">
-          <span class="admin-stat-label">Erreurs géocodage</span>
-          <strong>{{ stats.lieux.geocode_error }}</strong>
-          <RouterLink v-if="stats.lieux.geocode_error" to="/admin/lieux?geocode_error=1"
-            >Gérer →</RouterLink
-          >
         </div>
         <div class="card admin-stat">
           <span class="admin-stat-label">Photos</span>

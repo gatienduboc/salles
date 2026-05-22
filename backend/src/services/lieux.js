@@ -154,13 +154,17 @@ function applyFilters(q, query, { includeType = true } = {}) {
   if (query.has_coords === 'true' || query.has_coords === '1') {
     q = q.whereNotNull('lieux.latitude').whereNotNull('lieux.longitude');
   }
-  if (query.sans_coords === 'true' || query.sans_coords === '1') {
+  const geoProblemFilter =
+    query.sans_coords === 'true' ||
+    query.sans_coords === '1' ||
+    query.geocode_error === 'true' ||
+    query.geocode_error === '1';
+  if (geoProblemFilter) {
     q = q.where((b) => {
-      b.whereNull('lieux.latitude').orWhereNull('lieux.longitude');
+      b.whereNull('lieux.latitude')
+        .orWhereNull('lieux.longitude')
+        .orWhereNotNull('lieux.geocode_error');
     });
-  }
-  if (query.geocode_error === 'true' || query.geocode_error === '1') {
-    q = q.whereNotNull('lieux.geocode_error');
   }
   return q;
 }

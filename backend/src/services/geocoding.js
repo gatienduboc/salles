@@ -17,7 +17,22 @@ export function extractVille(address) {
   );
 }
 
-export async function geocodeAddress(adresse, options = {}) {
+/** Libellé court pour la liste de suggestions. */
+export function formatSuggestionLabel(hit) {
+  const a = hit.address || {};
+  const parts = [];
+  const name = hit.name || a.amenity || a.building;
+  if (name) parts.push(name);
+  const street = [a.house_number, a.road || a.pedestrian || a.footway].filter(Boolean).join(' ');
+  if (street) parts.push(street);
+  const city = extractVille(a);
+  const locality = [a.postcode, city].filter(Boolean).join(' ');
+  if (locality) parts.push(locality);
+  if (parts.length) return parts.join(', ');
+  return hit.display_name || '';
+}
+
+async function nominatimSearch(searchParams, options = {}) {
   const fetchFn = options.fetchFn || globalThis.fetch;
   const now = Date.now();
   const wait = config.nominatim.minIntervalMs - (now - lastRequestAt);
@@ -25,10 +40,9 @@ export async function geocodeAddress(adresse, options = {}) {
   lastRequestAt = Date.now();
 
   const url = new URL('/search', config.nominatim.baseUrl);
-  url.searchParams.set('q', adresse);
-  url.searchParams.set('format', 'json');
-  url.searchParams.set('limit', '1');
-  url.searchParams.set('countrycodes', options.countrycodes || 'fr');
+  for (const [key, value] of Object.entries(searchParams)) {
+    if (value != null && value !== '') url.searchParams.set(key, String(value));
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), config.nominatim.timeoutMs);
@@ -39,28 +53,75 @@ export async function geocodeAddress(adresse, options = {}) {
       signal: controller.signal,
     });
     if (!res.ok) {
-      return { error: `Nominatim HTTP ${res.status}` };
+      return { error: `Nominatim HTTP ${res.status}`, data: [] };
     }
     const data = await res.json();
-    if (!Array.isArray(data) || data.length === 0) {
-      return { error: 'Aucun résultat pour cette adresse' };
+    if (!Array.isArray(data)) {
+      return { error: 'Réponse Nominatim invalide', data: [] };
     }
-    const hit = data[0];
-    return {
-      latitude: parseFloat(hit.lat),
-      longitude: parseFloat(hit.lon),
-      ville: extractVille(hit.address),
-      code_postal: hit.address?.postcode || null,
-      geocoded_at: new Date(),
-      geocode_error: null,
-    };
+    return { data };
   } catch (err) {
     const message =
-      err.name === 'AbortError' ? 'Géocodage expiré (timeout)' : err.message;
-    return { error: message };
+      err.name === 'AbortError' ? 'Recherche expirée (timeout)' : err.message;
+    return { error: message, data: [] };
   } finally {
     clearTimeout(timeout);
   }
+}
+
+export async function searchAddressSuggestions(query, options = {}) {
+  const q = String(query || '').trim();
+  if (q.length < 3) return { suggestions: [] };
+
+  const { data, error } = await nominatimSearch(
+    {
+      q,
+      format: 'json',
+      limit: String(options.limit ?? 6),
+      addressdetails: '1',
+      countrycodes: options.countrycodes || 'fr',
+    },
+    options
+  );
+
+  const suggestions = data.map((hit) => ({
+    label: formatSuggestionLabel(hit),
+    adresse: hit.display_name || formatSuggestionLabel(hit),
+    ville: extractVille(hit.address),
+    code_postal: hit.address?.postcode || null,
+    latitude: parseFloat(hit.lat),
+    longitude: parseFloat(hit.lon),
+  }));
+
+  return { suggestions, error: error || null };
+}
+
+export async function geocodeAddress(adresse, options = {}) {
+  const { data, error } = await nominatimSearch(
+    {
+      q: adresse,
+      format: 'json',
+      limit: '1',
+      addressdetails: '1',
+      countrycodes: options.countrycodes || 'fr',
+    },
+    options
+  );
+
+  if (error) return { error };
+  if (!data.length) {
+    return { error: 'Aucun résultat pour cette adresse' };
+  }
+
+  const hit = data[0];
+  return {
+    latitude: parseFloat(hit.lat),
+    longitude: parseFloat(hit.lon),
+    ville: extractVille(hit.address),
+    code_postal: hit.address?.postcode || null,
+    geocoded_at: new Date(),
+    geocode_error: null,
+  };
 }
 
 export async function geocodeLieuIfNeeded(db, lieuId, adresse, previousAdresse, options = {}) {

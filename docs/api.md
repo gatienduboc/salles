@@ -21,6 +21,7 @@ Base URL : `http://localhost:3000` (dev) ou `https://salle.example.fr/api` (prod
 
 | Méthode | Route | Auth |
 |---------|-------|------|
+| GET | `/address/suggest?q=…` | Non (min. 3 car.) |
 | GET | `/lieux` | Non |
 | GET | `/lieux/map` | Optionnel (note perso) |
 | GET | `/lieux/auteurs` | Non |
@@ -102,6 +103,12 @@ Retourne uniquement les lieux avec coordonnées. Plafond 500 (`meta.capped` si d
 
 Aperçu carte côté front : tooltip au survol (photo, adresse, note, extrait commentaire).
 
+### GET /address/suggest — aide à la saisie
+
+`?q=` (3–200 caractères). Réponse : `{ suggestions: [{ label, adresse, ville, code_postal, latitude, longitude }], error? }`.
+
+Utilisé par le formulaire « Nouveau lieu » (autocomplétion OpenStreetMap, France).
+
 ### POST /lieux — obligatoire
 
 `nom`, `adresse`
@@ -124,7 +131,7 @@ Booléens : `true`, `false` ou `null` (inconnu).
 | PATCH | `/admin/users/:id` | Modifier pseudo, email, rôle |
 | PATCH | `/admin/users/:id/password` | Réinitialiser MDP |
 | DELETE | `/admin/users/:id` | Supprimer (si 0 fiche) |
-| GET | `/admin/lieux` | Liste (filtres + `sans_coords`, `geocode_error`) |
+| GET | `/admin/lieux` | Liste (filtres + `sans_coords` = sans coords ou échec géo ; `geocode_error` alias) |
 | PATCH | `/admin/lieux/bulk` | `{ ids, patch: { type?, auteur_id? } }` max 50 |
 | DELETE | `/admin/lieux/bulk` | `{ ids }` max 50 |
 | POST | `/admin/geocode/bulk` | `{ ids? }` ou lot sans coords (50 max) |

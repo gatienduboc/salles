@@ -19,9 +19,10 @@ export async function getAdminStats(knexDb) {
   const [lieuxTotal] = await knexDb('lieux').count({ total: '*' });
   const [favori] = await knexDb('lieux').where({ type: 'favori' }).count({ total: '*' });
   const [blacklist] = await knexDb('lieux').where({ type: 'blacklist' }).count({ total: '*' });
-  const [sansCoords] = await knexDb('lieux')
-    .where((b) => b.whereNull('latitude').orWhereNull('longitude'))
-    .count({ total: '*' });
+  const geoProblem = (b) => {
+    b.whereNull('latitude').orWhereNull('longitude').orWhereNotNull('geocode_error');
+  };
+  const [sansCoords] = await knexDb('lieux').where(geoProblem).count({ total: '*' });
   const [geocodeError] = await knexDb('lieux').whereNotNull('geocode_error').count({ total: '*' });
   const [photosTotal] = await knexDb('photos').count({ total: '*' });
 

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db/knex.js';
-import { body, validationResult } from 'express-validator';
+import { body, query, validationResult } from 'express-validator';
 import { authenticateJWT, optionalAuthenticateJWT } from '../middleware/auth.js';
 import { getRatingAggregates, attachRatings, upsertLieuRating } from '../services/ratings.js';
 import {
@@ -8,7 +8,7 @@ import {
   lieuUpdateRules,
   validateLieu,
 } from '../middleware/lieuValidation.js';
-import { geocodeLieuIfNeeded } from '../services/geocoding.js';
+import { geocodeLieuIfNeeded, searchAddressSuggestions } from '../services/geocoding.js';
 import {
   pickLieuBody,
   formatLieu,
@@ -37,6 +37,23 @@ async function enrichListResult(result, userId) {
   const ratingMap = await getRatingAggregates(db, ids, userId);
   return { ...result, data: attachRatings(result.data, ratingMap) };
 }
+
+router.get(
+  '/address/suggest',
+  query('q').trim().isLength({ min: 3, max: 200 }),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+      const result = await searchAddressSuggestions(req.query.q, req.geocodeOptions);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 router.get('/lieux', optionalAuthenticateJWT, async (req, res, next) => {
   try {

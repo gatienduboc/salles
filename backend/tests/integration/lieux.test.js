@@ -63,6 +63,19 @@ describe('Lieux API', () => {
     expect(filtered.body.data.every((l) => l.auteur.pseudo === 'DJ Beta')).toBe(true);
   });
 
+  it('GET /address/suggest propose des adresses', async () => {
+    const res = await request(app).get('/address/suggest').query({ q: 'Lyon' });
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.suggestions)).toBe(true);
+    expect(res.body.suggestions.length).toBeGreaterThan(0);
+    expect(res.body.suggestions[0].adresse).toBeDefined();
+  });
+
+  it('GET /address/suggest q trop court → 400', async () => {
+    const res = await request(app).get('/address/suggest').query({ q: 'ab' });
+    expect(res.status).toBe(400);
+  });
+
   it('GET /lieux/map retourne les coords filtrées', async () => {
     const { user } = await createUser();
     await createLieu(user.id, {

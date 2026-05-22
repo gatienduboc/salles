@@ -1,5 +1,10 @@
 # Géocodage (Nominatim)
 
+## Saisie (formulaire)
+
+- `GET /address/suggest?q=...` (min. 3 caractères) : suggestions OpenStreetMap via le serveur (respect du débit Nominatim).
+- Le champ adresse du formulaire propose une liste au fil de la saisie ; choisir une ligne remplit l’adresse complète pour un géocodage fiable.
+
 ## Déclenchement
 
 - Création ou modification d’un lieu si l’`adresse` change

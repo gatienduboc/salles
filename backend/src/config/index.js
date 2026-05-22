@@ -21,4 +21,9 @@ export const config = {
     minIntervalMs: Number(process.env.NOMINATIM_MIN_INTERVAL_MS || 1100),
   },
   apiPublicUrl: process.env.API_PUBLIC_URL || 'http://localhost:3000',
+  /** URLs photos (/uploads), sans suffixe /api */
+  sitePublicUrl: (process.env.SITE_PUBLIC_URL || process.env.API_PUBLIC_URL || 'http://localhost:3000').replace(
+    /\/api\/?$/,
+    ''
+  ),
 };

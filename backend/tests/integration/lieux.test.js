@@ -24,6 +24,19 @@ describe('Lieux API', () => {
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBeGreaterThanOrEqual(1);
     expect(res.body.meta).toHaveProperty('total');
+    expect(res.body.meta).toHaveProperty('counts');
+    expect(res.body.data[0]).toHaveProperty('auteur');
+  });
+
+  it('filtre type favori et meta.counts', async () => {
+    const { user } = await createUser();
+    await createLieu(user.id, { nom: 'Mauvais', type: 'blacklist', adresse: 'A' });
+    await createLieu(user.id, { nom: 'Bon', type: 'favori', adresse: 'B' });
+
+    const res = await request(app).get('/lieux').query({ type: 'favori' });
+    expect(res.status).toBe(200);
+    expect(res.body.data.every((l) => l.type === 'favori')).toBe(true);
+    expect(res.body.meta.counts.favori).toBeGreaterThanOrEqual(1);
   });
 
   it('filtre ville et search', async () => {
@@ -57,6 +70,7 @@ describe('Lieux API', () => {
       });
 
     expect(created.status).toBe(201);
+    expect(created.body.auteur).toHaveProperty('pseudo');
     const id = created.body.id;
 
     const updated = await request(app)

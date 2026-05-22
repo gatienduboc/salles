@@ -1,6 +1,13 @@
 # API REST
 
-Base URL : `https://api.example.com` (voir `API_PUBLIC_URL`).
+Base URL : `http://localhost:3000` (dev) ou `https://salle.example.fr/api` (prod via proxy).
+
+## Types de lieux
+
+| Valeur | Signification UI |
+|--------|------------------|
+| `favori` | Recommandé |
+| `blacklist` | À éviter |
 
 ## Auth
 
@@ -9,14 +16,6 @@ Base URL : `https://api.example.com` (voir `API_PUBLIC_URL`).
 | POST | `/auth/register` | Non |
 | POST | `/auth/login` | Non |
 | POST | `/auth/logout` | Non (204) |
-
-### Register / Login body
-
-```json
-{ "email": "dj@example.com", "password": "password123", "pseudo": "MonPseudo" }
-```
-
-Réponse : `{ "token": "...", "user": { "id", "email", "pseudo", "role" } }`
 
 ## Lieux
 
@@ -31,23 +30,46 @@ Réponse : `{ "token": "...", "user": { "id", "email", "pseudo", "role" } }`
 
 ### GET /lieux — query params
 
-- `type` : `blacklist` | `favori`
-- `ville` : filtre sur ville géocodée (LIKE)
-- `search` : nom ou adresse
-- `page`, `limit` (défaut 20, max 100)
+- `type` : `blacklist` | `favori` (filtre exclusif)
+- `ville`, `search`, `page`, `limit` (max 100)
+- `sort` : `updated_at` (défaut) | `nom`
 
 Réponse :
 
 ```json
 {
-  "data": [ { "id", "nom", "adresse", "ville", "latitude", "longitude", "photos": [] } ],
-  "meta": { "page": 1, "limit": 20, "total": 42 }
+  "data": [{
+    "id": 1,
+    "nom": "...",
+    "adresse": "...",
+    "type": "favori",
+    "auteur": { "id": 1, "pseudo": "Demo" },
+    "fumee_interdite": null,
+    "db_limite": 95,
+    "photos": []
+  }],
+  "meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 5,
+    "counts": { "blacklist": 2, "favori": 3 }
+  }
 }
 ```
 
-### POST /lieux — champs obligatoires
+`counts` : totaux par type (hors filtre `type`, mais avec `ville` / `search`).
+
+### POST /lieux — obligatoire
 
 `nom`, `adresse`
+
+### Champs optionnels (POST / PUT)
+
+`type`, `nom_gerant`, `telephone`, `fumee_interdite`, `confetti_interdit`, `db_limite` (entier ≥ 0), `acces_difficile`, `proprio_relou`, `commentaire`, `heure_fermeture`, `sono_imposee`, `date_dernier_evenement` (ISO date)
+
+Booléens : `true`, `false` ou `null` (inconnu).
+
+`auteur_id` : renseigné automatiquement à la création.
 
 ## Photos
 
@@ -56,14 +78,11 @@ Réponse :
 | POST | `/lieux/:id/photos` | JWT (multipart `photos`) |
 | DELETE | `/lieux/:id/photos/:photoId` | JWT |
 
-## Santé
-
-`GET /health` → `{ "status": "ok", "db": "ok" }`
-
 ## Exemples curl
 
 ```bash
-curl -s http://localhost:3000/lieux?ville=Paris
+curl -s "http://localhost:3000/lieux?type=favori"
+curl -s "http://localhost:3000/lieux?type=blacklist"
 curl -s -X POST http://localhost:3000/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"demo@salles.local","password":"password123"}'

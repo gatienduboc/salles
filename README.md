@@ -1,35 +1,37 @@
 # Salles
 
-Répertoire collaboratif de **lieux de réception** (avis, infos pratiques, carte). Évolution prévue : listes thématiques (à éviter / recommandés, etc.).
+Répertoire collaboratif de **lieux de réception** — fiches **recommandées** ou **à éviter**, avec carte et filtres.
 
-## Stack
-
-- **Backend** : Node.js, Express, Knex, MariaDB, JWT
-- **Frontend** : Vue 3, Vite, Pinia, Leaflet (OpenStreetMap)
-- **Géocodage** : Nominatim
-- **Déploiement** : Docker Compose + Traefik
-
-## Démarrage rapide
+## Développement (Docker, sans rebuild)
 
 ```bash
-cp .env.example .env   # puis adapter les secrets
-docker compose up -d db
-cd backend && npm install && npm run migrate && npm run seed && npm run dev
-cd frontend && npm install && npm run dev
+cp .env.example .env
+make dev-up
+docker compose -f docker-compose.dev.yml exec backend npx knex seed:run
 ```
 
-- Interface : http://localhost:5173
-- API : http://localhost:3000
+- **https://salle.gatien-duboc.fr** — interface (modifs instantanées, Traefik)
+- API : **https://salle.gatien-duboc.fr/api**
 
-Compte démo (seed) : `demo@salles.local` / `password123`
+Compte démo : `demo@salles.local` / `password123`
 
-## Documentation
+Voir [docs/development.md](docs/development.md).
 
-Voir le dossier [docs/](docs/).
+## Production
+
+```bash
+make dev-down          # arrêter le dev si actif
+make prod-up           # build + Traefik + HTTPS
+```
+
+Voir [docs/deployment.md](docs/deployment.md) pour le passage dev → prod.
 
 ## Tests
 
 ```bash
-cd backend && npm test
-cd frontend && npm test
+make test
 ```
+
+## Documentation
+
+[docs/](docs/)

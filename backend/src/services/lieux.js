@@ -1,4 +1,5 @@
 import { config } from '../config/index.js';
+import { db } from '../db/knex.js';
 
 const LIEU_FIELDS = [
   'nom',
@@ -17,6 +18,34 @@ const LIEU_FIELDS = [
   'type',
 ];
 
+const LIEU_COLUMNS = [
+  'lieux.id',
+  'lieux.nom',
+  'lieux.adresse',
+  'lieux.nom_gerant',
+  'lieux.telephone',
+  'lieux.fumee_interdite',
+  'lieux.confetti_interdit',
+  'lieux.db_limite',
+  'lieux.acces_difficile',
+  'lieux.proprio_relou',
+  'lieux.commentaire',
+  'lieux.heure_fermeture',
+  'lieux.sono_imposee',
+  'lieux.auteur_id',
+  'lieux.date_dernier_evenement',
+  'lieux.type',
+  'lieux.latitude',
+  'lieux.longitude',
+  'lieux.ville',
+  'lieux.code_postal',
+  'lieux.geocoded_at',
+  'lieux.geocode_error',
+  'lieux.created_at',
+  'lieux.updated_at',
+  'users.pseudo as auteur_pseudo',
+];
+
 export function pickLieuBody(body) {
   const data = {};
   for (const key of LIEU_FIELDS) {
@@ -25,47 +54,101 @@ export function pickLieuBody(body) {
   return data;
 }
 
+export function formatAuteur(row) {
+  if (!row?.auteur_id) return null;
+  return { id: row.auteur_id, pseudo: row.auteur_pseudo || null };
+}
+
 export function formatLieu(row, photos = []) {
   if (!row) return null;
   return {
-    ...row,
+    id: row.id,
+    nom: row.nom,
+    adresse: row.adresse,
+    nom_gerant: row.nom_gerant,
+    telephone: row.telephone,
+    fumee_interdite: row.fumee_interdite,
+    confetti_interdit: row.confetti_interdit,
+    db_limite: row.db_limite,
+    acces_difficile: row.acces_difficile,
+    proprio_relou: row.proprio_relou,
+    commentaire: row.commentaire,
+    heure_fermeture: row.heure_fermeture,
+    sono_imposee: row.sono_imposee,
+    auteur_id: row.auteur_id,
+    auteur: formatAuteur(row),
+    date_dernier_evenement: row.date_dernier_evenement,
+    type: row.type,
     latitude: row.latitude != null ? Number(row.latitude) : null,
     longitude: row.longitude != null ? Number(row.longitude) : null,
+    ville: row.ville,
+    code_postal: row.code_postal,
+    geocoded_at: row.geocoded_at,
+    geocode_error: row.geocode_error,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
     photos: photos.map((p) => ({
       id: p.id,
-      url: `${config.apiPublicUrl}/uploads/${p.filename}`,
+      url: `${config.sitePublicUrl}/uploads/${p.filename}`,
       filename: p.filename,
       created_at: p.created_at,
     })),
   };
 }
 
-export async function listLieux(db, query) {
-  const page = Math.max(1, parseInt(query.page, 10) || 1);
-  const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 20));
-  const offset = (page - 1) * limit;
-
-  let q = db('lieux').select('lieux.*');
-
-  if (query.type) {
-    q = q.where('type', query.type);
+function applyFilters(q, query, { includeType = true } = {}) {
+  if (includeType && query.type) {
+    q = q.where('lieux.type', query.type);
   }
   if (query.ville) {
-    q = q.where('ville', 'like', `%${query.ville}%`);
+    q = q.where('lieux.ville', 'like', `%${query.ville}%`);
   }
   if (query.search) {
     const term = `%${query.search}%`;
     q = q.where((builder) => {
-      builder.where('nom', 'like', term).orWhere('adresse', 'like', term);
+      builder.where('lieux.nom', 'like', term).orWhere('lieux.adresse', 'like', term);
     });
   }
+  return q;
+}
+
+export async function fetchLieuById(id) {
+  return db('lieux')
+    .leftJoin('users', 'lieux.auteur_id', 'users.id')
+    .select(LIEU_COLUMNS)
+    .where('lieux.id', id)
+    .first();
+}
+
+export async function getCounts(query) {
+  let q = db('lieux');
+  q = applyFilters(q, query, { includeType: false });
+  const rows = await q.select('type').count({ count: '*' }).groupBy('type');
+  const counts = { blacklist: 0, favori: 0 };
+  for (const r of rows) {
+    counts[r.type] = Number(r.count);
+  }
+  return counts;
+}
+
+export async function listLieux(knexDb, query) {
+  const page = Math.max(1, parseInt(query.page, 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 20));
+  const offset = (page - 1) * limit;
+  const sortCol = query.sort === 'nom' ? 'lieux.nom' : 'lieux.updated_at';
+
+  let q = knexDb('lieux')
+    .leftJoin('users', 'lieux.auteur_id', 'users.id')
+    .select(LIEU_COLUMNS);
+  q = applyFilters(q, query);
 
   const countQuery = q.clone().clearSelect().count({ total: '*' }).first();
-  const rows = await q.orderBy('updated_at', 'desc').limit(limit).offset(offset);
+  const rows = await q.orderBy(sortCol, query.sort === 'nom' ? 'asc' : 'desc').limit(limit).offset(offset);
   const { total } = await countQuery;
+  const counts = await getCounts(query);
 
   return {
     data: rows.map((r) => formatLieu(r, [])),
-    meta: { page, limit, total: Number(total) },
+    meta: { page, limit, total: Number(total), counts },
   };
 }

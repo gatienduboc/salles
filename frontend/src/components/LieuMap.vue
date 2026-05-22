@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, onUnmounted, watch, ref } from 'vue';
 import L from 'leaflet';
+import { getLieuType } from '../constants/lieuTypes.js';
 
 const props = defineProps({
   lieux: { type: Array, default: () => [] },
@@ -18,12 +19,24 @@ function mappable(lieux) {
 
 function render() {
   if (!map) return;
-  if (layer) layer.clearLayers();
+  if (layer) {
+    map.removeLayer(layer);
+    layer = null;
+  }
   const points = mappable(props.lieux);
   const markers = points.map((l) => {
-    const m = L.marker([Number(l.latitude), Number(l.longitude)]);
-    m.bindPopup(`<strong>${l.nom}</strong><br/>${l.ville || ''}`);
-    return m;
+    const { color, label } = getLieuType(l.type);
+    const marker = L.circleMarker([Number(l.latitude), Number(l.longitude)], {
+      radius: 10,
+      fillColor: color,
+      color: '#fff',
+      weight: 2,
+      fillOpacity: 0.85,
+    });
+    marker.bindPopup(
+      `<strong>${l.nom}</strong><br/><span style="color:${color}">${label}</span><br/>${l.ville || ''}`
+    );
+    return marker;
   });
   layer = L.layerGroup(markers).addTo(map);
   if (points.length) {
@@ -50,5 +63,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="mapEl" class="map-wrap" data-testid="lieu-map" />
+  <div>
+    <div ref="mapEl" class="map-wrap" data-testid="lieu-map" />
+    <div class="map-legend">
+      <span class="legend-dot legend-favori" /> Recommandé
+      <span class="legend-dot legend-blacklist" /> À éviter
+    </div>
+  </div>
 </template>

@@ -12,6 +12,7 @@ import {
   formatLieu,
   listLieux,
   listLieuxForMap,
+  listLieuxAuteurs,
   fetchLieuById,
 } from '../services/lieux.js';
 import fs from 'fs/promises';
@@ -39,6 +40,15 @@ router.get('/lieux', async (req, res, next) => {
 router.get('/lieux/map', async (req, res, next) => {
   try {
     const result = await listLieuxForMap(db, req.query);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/lieux/auteurs', async (req, res, next) => {
+  try {
+    const result = await listLieuxAuteurs(db, req.query);
     res.json(result);
   } catch (err) {
     next(err);

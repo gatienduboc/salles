@@ -134,7 +134,10 @@ function applyFilters(q, query, { includeType = true } = {}) {
     });
   }
   if (query.auteur_id) {
-    q = q.where('lieux.auteur_id', query.auteur_id);
+    const auteurId = parseInt(query.auteur_id, 10);
+    if (auteurId > 0) {
+      q = q.where('lieux.auteur_id', auteurId);
+    }
   }
   if (query.has_coords === 'true' || query.has_coords === '1') {
     q = q.whereNotNull('lieux.latitude').whereNotNull('lieux.longitude');
@@ -203,6 +206,27 @@ export async function listLieux(knexDb, query) {
   return {
     data: rows.map((r) => formatLieu(r, [])),
     meta: buildListMeta({ page, limit, total: totalNum, sort, order, counts }),
+  };
+}
+
+export async function listLieuxAuteurs(knexDb, query) {
+  const { auteur_id: _omit, page: _p, limit: _l, sort: _s, order: _o, ...filterQuery } =
+    query;
+
+  let q = knexDb('lieux')
+    .join('users', 'lieux.auteur_id', 'users.id')
+    .select('users.id', 'users.pseudo')
+    .count({ count: '*' });
+  q = applyFilters(q, filterQuery);
+
+  const rows = await q.groupBy('users.id', 'users.pseudo').orderBy('users.pseudo', 'asc');
+
+  return {
+    data: rows.map((r) => ({
+      id: r.id,
+      pseudo: r.pseudo,
+      count: Number(r.count),
+    })),
   };
 }
 

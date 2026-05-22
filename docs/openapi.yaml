@@ -65,6 +65,16 @@ paths:
       responses:
         '200':
           description: Liste paginée avec meta (totalPages, hasPrev, hasNext, counts)
+  /lieux/auteurs:
+    get:
+      summary: Auteurs avec au moins une fiche (filtres hors auteur_id)
+      parameters:
+        - { name: type, in: query, schema: { type: string, enum: [blacklist, favori] } }
+        - { name: ville, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: Liste id, pseudo, count
   /lieux/map:
     get:
       summary: Points carte (filtres sans pagination, max 500)

@@ -31,6 +31,20 @@ docker compose -f docker-compose.dev.yml exec backend npx knex seed:run
 
 Compte démo : `demo@salles.local` / `password123`
 
+### Jeu de données Alsace / Est (notes terrain)
+
+```bash
+# Sans effacer la BDD (ajoute ~26 fiches si absentes)
+make seed-est
+# ou en Docker :
+docker compose -f docker-compose.dev.yml exec backend npm run seed:est
+
+# Géocoder les adresses (Nominatim, ~30 s pour 26 lieux)
+make geocode-est
+```
+
+Un seul lieu est en **favori** (Bollwiller, retour juin 2024) ; le reste est en **à éviter**. Corriger noms/adresses dans `backend/seeds/003_lieux_est.js` si besoin. Les imports réels (DJ, etc.) se font via l’interface ou l’API — pas de seed dédié.
+
 ### Volumes
 
 | Volume | Rôle |

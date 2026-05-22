@@ -2,8 +2,11 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { api } from '../api/client.js';
+import { useAuthStore } from '../stores/auth.js';
 import TriStateBool from '../components/TriStateBool.vue';
 import { LIEU_TYPES } from '../constants/lieuTypes.js';
+
+const auth = useAuthStore();
 
 const route = useRoute();
 const router = useRouter();
@@ -84,6 +87,9 @@ async function submit() {
 
 <template>
   <h1>{{ isEdit ? 'Modifier' : 'Nouveau' }} lieu</h1>
+  <p v-if="!isEdit && auth.user?.pseudo" class="lieu-meta">
+    Cette fiche sera associée au compte <strong>{{ auth.user.pseudo }}</strong>.
+  </p>
   <p v-if="error" style="color: var(--accent-soft)">{{ error }}</p>
 
   <form class="card" @submit.prevent="submit">

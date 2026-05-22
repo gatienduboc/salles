@@ -37,6 +37,12 @@ migrate:
 seed:
 	cd backend && npm run seed
 
+seed-est:
+	cd backend && npm run seed:est
+
+geocode-est:
+	cd backend && npm run geocode:est
+
 test:
 	cd backend && npm test
 	cd frontend && npm test

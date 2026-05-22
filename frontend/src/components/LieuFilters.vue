@@ -5,6 +5,7 @@ import { SORT_OPTIONS, LIMIT_OPTIONS } from '../utils/lieuQuery.js';
 const model = defineModel({ type: Object, required: true });
 const props = defineProps({
   counts: { type: Object, default: () => ({ blacklist: 0, favori: 0 }) },
+  auteurs: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(['apply']);
@@ -57,6 +58,15 @@ function tabCount(value) {
     </div>
 
     <div class="filter-row">
+      <div class="filter-field">
+        <label>Auteur</label>
+        <select v-model="model.auteur_id" data-testid="filter-auteur" @change="apply">
+          <option value="">Tous les auteurs</option>
+          <option v-for="a in auteurs" :key="a.id" :value="a.id">
+            {{ a.pseudo }} ({{ a.count }})
+          </option>
+        </select>
+      </div>
       <div class="filter-field">
         <label>Ville</label>
         <input

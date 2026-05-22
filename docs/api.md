@@ -23,6 +23,7 @@ Base URL : `http://localhost:3000` (dev) ou `https://salle.example.fr/api` (prod
 |---------|-------|------|
 | GET | `/lieux` | Non |
 | GET | `/lieux/map` | Non |
+| GET | `/lieux/auteurs` | Non |
 | GET | `/lieux/:id` | Non |
 | POST | `/lieux` | JWT |
 | PUT | `/lieux/:id` | JWT |
@@ -60,6 +61,14 @@ Réponse `meta` :
   "order": "asc",
   "counts": { "blacklist": 20, "favori": 25 }
 }
+```
+
+### GET /lieux/auteurs — auteurs ayant des fiches
+
+Mêmes filtres que la liste (`type`, `ville`, `search`…) **sans** `auteur_id`. Retourne les pseudos avec le nombre de fiches correspondantes :
+
+```json
+{ "data": [{ "id": 2, "pseudo": "Frédéric Fançon", "count": 3 }] }
 ```
 
 ### GET /lieux/map — carte (tous les points filtrés)

@@ -44,6 +44,25 @@ describe('Lieux API', () => {
     expect(res.body.data[0].nom).toBe('Alpha');
   });
 
+  it('filtre par auteur_id et GET /lieux/auteurs', async () => {
+    const { user: u1 } = await createUser({ pseudo: 'DJ Alpha' });
+    const { user: u2 } = await createUser({ email: 'b@test.local', pseudo: 'DJ Beta' });
+    await createLieu(u1.id, { nom: 'Salle A', adresse: '1 rue A' });
+    await createLieu(u1.id, { nom: 'Salle B', adresse: '2 rue B' });
+    await createLieu(u2.id, { nom: 'Salle C', adresse: '3 rue C' });
+
+    const auteurs = await request(app).get('/lieux/auteurs');
+    expect(auteurs.status).toBe(200);
+    const alpha = auteurs.body.data.find((a) => a.pseudo === 'DJ Alpha');
+    const beta = auteurs.body.data.find((a) => a.pseudo === 'DJ Beta');
+    expect(alpha?.count).toBe(2);
+    expect(beta?.count).toBe(1);
+
+    const filtered = await request(app).get('/lieux').query({ auteur_id: u2.id });
+    expect(filtered.body.data.some((l) => l.nom === 'Salle C')).toBe(true);
+    expect(filtered.body.data.every((l) => l.auteur.pseudo === 'DJ Beta')).toBe(true);
+  });
+
   it('GET /lieux/map retourne les coords filtrées', async () => {
     const { user } = await createUser();
     await createLieu(user.id, {

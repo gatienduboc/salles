@@ -31,6 +31,7 @@ const meta = ref({
   counts: { blacklist: 0, favori: 0 },
 });
 const loading = ref(false);
+const auteurs = ref([]);
 
 const pageTitle = computed(() => {
   if (filters.value.type === 'favori') return 'Lieux recommandés';
@@ -47,10 +48,13 @@ async function load() {
   try {
     const listQs = buildApiParams(filters.value);
     const mapQs = buildApiParams(filters.value, { forMap: true });
-    const [listData, mapData] = await Promise.all([
+    const auteursQs = buildApiParams(filters.value, { forMap: true, omitAuteur: true });
+    const [listData, mapData, auteursData] = await Promise.all([
       api(`/lieux${listQs}`),
       api(`/lieux/map${mapQs}`),
+      api(`/lieux/auteurs${auteursQs}`),
     ]);
+    auteurs.value = auteursData.data;
     lieux.value = listData.data;
     meta.value = listData.meta;
     mapLieux.value = mapData.data;
@@ -90,7 +94,12 @@ watch(
     {{ meta.total }} fiche(s) au total — lecture publique, édition pour les membres connectés.
   </p>
 
-  <LieuFilters v-model="filters" :counts="meta.counts" @apply="applyFilters" />
+  <LieuFilters
+    v-model="filters"
+    :counts="meta.counts"
+    :auteurs="auteurs"
+    @apply="applyFilters"
+  />
 
   <div class="card">
     <h2>Carte</h2>

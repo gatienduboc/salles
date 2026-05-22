@@ -28,7 +28,7 @@ export async function geocodeAddress(adresse, options = {}) {
   url.searchParams.set('q', adresse);
   url.searchParams.set('format', 'json');
   url.searchParams.set('limit', '1');
-  url.searchParams.set('countrycodes', 'fr');
+  url.searchParams.set('countrycodes', options.countrycodes || 'fr');
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), config.nominatim.timeoutMs);

@@ -10,6 +10,8 @@
     "migrate": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback",
     "seed": "knex seed:run",
+    "seed:est": "knex seed:run --specific=003_lieux_est.js",
+    "geocode:est": "node scripts/geocode-est.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

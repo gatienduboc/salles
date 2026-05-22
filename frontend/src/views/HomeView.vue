@@ -7,6 +7,7 @@ import LieuMap from '../components/LieuMap.vue';
 import LieuFilters from '../components/LieuFilters.vue';
 import LieuPagination from '../components/LieuPagination.vue';
 import LieuTypeBadge from '../components/LieuTypeBadge.vue';
+import LieuVote from '../components/LieuVote.vue';
 import {
   queryFromRoute,
   queryToRouteParams,
@@ -121,6 +122,12 @@ watch(
       <LieuTypeBadge :type="l.type" />
     </div>
     <p>{{ l.adresse }}</p>
+    <LieuVote
+      :lieu-id="l.id"
+      :rating="l.rating"
+      compact
+      @updated="(r) => (l.rating = r)"
+    />
     <p v-if="l.ville" style="color: var(--muted)">{{ l.ville }}</p>
     <p v-if="l.auteur?.pseudo" class="lieu-meta">Fiche par {{ l.auteur.pseudo }}</p>
     <p v-if="l.geocode_error" style="color: var(--accent-soft)">Géocodage : {{ l.geocode_error }}</p>

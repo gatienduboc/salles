@@ -5,6 +5,7 @@ import { api } from '../api/client.js';
 import { useAuthStore } from '../stores/auth.js';
 import LieuMap from '../components/LieuMap.vue';
 import LieuTypeBadge from '../components/LieuTypeBadge.vue';
+import LieuVote from '../components/LieuVote.vue';
 
 const route = useRoute();
 const auth = useAuthStore();
@@ -45,6 +46,13 @@ onMounted(load);
       <LieuTypeBadge :type="lieu.type" />
     </div>
     <p>{{ lieu.adresse }}</p>
+    <div class="card">
+      <LieuVote
+        :lieu-id="lieu.id"
+        :rating="lieu.rating"
+        @updated="(r) => (lieu.rating = r)"
+      />
+    </div>
     <p v-if="lieu.ville">
       Ville : {{ lieu.ville }}
       <span v-if="lieu.code_postal">({{ lieu.code_postal }})</span>

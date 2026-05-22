@@ -519,3 +519,123 @@ label {
 .account-stats-list li {
   margin-bottom: 0.35rem;
 }
+
+.lieu-vote {
+  margin: 0.5rem 0;
+}
+
+.lieu-vote-compact {
+  margin: 0.35rem 0;
+}
+
+.lieu-vote-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stars-row {
+  display: inline-flex;
+  gap: 0.05rem;
+}
+
+.stars-row-11 {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.lieu-vote-compact .stars-row-11 {
+  gap: 0;
+}
+
+.star-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0.1rem 0.15rem;
+  cursor: pointer;
+  color: var(--border);
+  transition: color 0.12s, transform 0.12s;
+}
+
+.star-btn-sm {
+  padding: 0.05rem 0.1rem;
+}
+
+.star-btn-sm .star-glyph {
+  font-size: 0.75rem;
+}
+
+.star-btn-sm .star-num {
+  font-size: 0.55rem;
+}
+
+.star-num {
+  font-size: 0.6rem;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.star-glyph {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.star-btn:hover:not(:disabled) {
+  transform: scale(1.08);
+}
+
+.star-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.star-btn.star-low {
+  color: #e57373;
+}
+
+.star-btn.star-mid {
+  color: #9aa3b2;
+}
+
+.star-btn.star-high {
+  color: #f4c542;
+}
+
+.star-base-mark .star-num {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.star-user .star-glyph {
+  text-shadow: 0 0 6px rgba(244, 197, 66, 0.45);
+}
+
+.vote-summary-inline {
+  font-size: 0.9rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.vote-summary-inline strong {
+  color: var(--text);
+}
+
+.vote-count-label {
+  margin-left: 0.25rem;
+}
+
+.vote-hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0.35rem 0 0;
+}
+
+.vote-error {
+  font-size: 0.85rem;
+  color: var(--accent-soft);
+  margin: 0.25rem 0 0;
+}

@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { db } from '../db/knex.js';
-import { authenticateJWT } from '../middleware/auth.js';
+import { body, validationResult } from 'express-validator';
+import { authenticateJWT, optionalAuthenticateJWT } from '../middleware/auth.js';
+import { getRatingAggregates, attachRatings, upsertLieuRating } from '../services/ratings.js';
 import {
   lieuCreateRules,
   lieuUpdateRules,
@@ -21,17 +23,25 @@ import { config } from '../config/index.js';
 
 const router = Router();
 
-async function getLieuWithPhotos(id) {
+async function getLieuWithPhotos(id, userId = null) {
   const row = await fetchLieuById(id);
   if (!row) return null;
   const photos = await db('photos').where({ lieu_id: id });
-  return formatLieu(row, photos);
+  const lieu = formatLieu(row, photos);
+  const ratingMap = await getRatingAggregates(db, [Number(id)], userId);
+  return attachRatings([lieu], ratingMap)[0];
 }
 
-router.get('/lieux', async (req, res, next) => {
+async function enrichListResult(result, userId) {
+  const ids = result.data.map((l) => l.id);
+  const ratingMap = await getRatingAggregates(db, ids, userId);
+  return { ...result, data: attachRatings(result.data, ratingMap) };
+}
+
+router.get('/lieux', optionalAuthenticateJWT, async (req, res, next) => {
   try {
     const result = await listLieux(db, req.query);
-    res.json(result);
+    res.json(await enrichListResult(result, req.user?.id));
   } catch (err) {
     next(err);
   }
@@ -55,9 +65,31 @@ router.get('/lieux/auteurs', async (req, res, next) => {
   }
 });
 
-router.get('/lieux/:id', async (req, res, next) => {
+router.put(
+  '/lieux/:id/rating',
+  authenticateJWT,
+  body('stars').isInt({ min: 0, max: 10 }),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+      const lieuId = parseInt(req.params.id, 10);
+      const lieu = await db('lieux').where({ id: lieuId }).first();
+      if (!lieu) return res.status(404).json({ error: 'Lieu introuvable' });
+
+      const rating = await upsertLieuRating(db, lieuId, req.user.id, req.body.stars);
+      res.json({ rating });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.get('/lieux/:id', optionalAuthenticateJWT, async (req, res, next) => {
   try {
-    const lieu = await getLieuWithPhotos(req.params.id);
+    const lieu = await getLieuWithPhotos(req.params.id, req.user?.id);
     if (!lieu) return res.status(404).json({ error: 'Lieu introuvable' });
     res.json(lieu);
   } catch (err) {

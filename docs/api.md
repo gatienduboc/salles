@@ -29,6 +29,11 @@ Base URL : `http://localhost:3000` (dev) ou `https://salle.example.fr/api` (prod
 | PUT | `/lieux/:id` | JWT |
 | DELETE | `/lieux/:id` | JWT |
 | POST | `/lieux/:id/geocode` | JWT |
+| PUT | `/lieux/:id/rating` | JWT |
+
+Chaque fiche inclut `rating: { average, count, baseline: 5, user_stars?, below_base, above_base }`. Sans vote : `average` = **5** (neutre).
+
+`PUT /lieux/:id/rating` — `{ stars: 0..10 }` : une note par utilisateur (`<5` négatif, `5` neutre, `>5` positif).
 
 ### GET /lieux — liste paginée
 

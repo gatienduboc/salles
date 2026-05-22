@@ -1,6 +1,25 @@
 import { verifyToken } from '../utils/jwt.js';
 import { db } from '../db/knex.js';
 
+export function optionalAuthenticateJWT(req, res, next) {
+  const header = req.headers.authorization;
+  if (!header?.startsWith('Bearer ')) {
+    return next();
+  }
+  try {
+    const payload = verifyToken(header.slice(7));
+    req.user = {
+      id: payload.sub,
+      email: payload.email,
+      pseudo: payload.pseudo,
+      role: payload.role || 'user',
+    };
+  } catch {
+    /* ignore invalid token for public reads */
+  }
+  next();
+}
+
 export function authenticateJWT(req, res, next) {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) {

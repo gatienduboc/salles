@@ -20,6 +20,10 @@ Champs métier + géocodage :
 
 `lieu_id` → `lieux.id` (CASCADE), `filename`
 
+### lieu_ratings
+
+`lieu_id`, `user_id` (unique par couple), `stars` (0–10, **5 = neutre**), `value` (dérivé : -1 / 0 / 1). Un vote par utilisateur et par salle (upsert).
+
 ## Commandes
 
 ```bash

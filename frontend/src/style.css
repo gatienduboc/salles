@@ -452,3 +452,70 @@ label {
 .admin-warn {
   color: var(--accent-soft);
 }
+
+.account-wrap {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .account-wrap {
+    grid-template-columns: 1fr;
+  }
+}
+
+.account-nav nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.account-nav h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.account-nav-email {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  word-break: break-all;
+}
+
+.account-nav a.router-link-active {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.account-back {
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.account-lead {
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
+
+.input-readonly {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.field-hint {
+  margin: -0.5rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.account-stats-list {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.account-stats-list li {
+  margin-bottom: 0.35rem;
+}

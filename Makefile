@@ -40,6 +40,9 @@ seed:
 seed-est:
 	cd backend && npm run seed:est
 
+seed-admin-password:
+	cd backend && npm run seed:admin-password
+
 geocode-est:
 	cd backend && npm run geocode:est
 

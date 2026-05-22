@@ -34,6 +34,8 @@ Compte démo : `demo@salles.local` / `password123`
 ### Administration
 
 - Email admin (`.env` `ADMIN_EMAIL`, défaut `gatien.duboc@gmail.com`) : promu via migration `004_promote_admin`
+- Mot de passe admin par défaut : `ADMIN_DEFAULT_PASSWORD` (défaut `password123`) — réinitialiser avec `make seed-admin-password` ou `npm run seed:admin-password` dans `backend/`
+- **Mon compte** (connecté) : `/compte` — profil (pseudo), mot de passe, lien vers mes fiches
 - Interface : `/admin` (tableau de bord, utilisateurs, salles avec actions en masse)
 - Édition **unitaire** d’une fiche : tout utilisateur connecté (inchangé)
 - Éditions **en masse** : admin uniquement (`PATCH/DELETE /admin/lieux/bulk`, `POST /admin/geocode/bulk`)

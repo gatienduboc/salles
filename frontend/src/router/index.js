@@ -4,6 +4,9 @@ import LieuDetailView from '../views/LieuDetailView.vue';
 import LieuFormView from '../views/LieuFormView.vue';
 import LoginView from '../views/LoginView.vue';
 import RegisterView from '../views/RegisterView.vue';
+import AccountLayout from '../components/AccountLayout.vue';
+import AccountProfileView from '../views/account/AccountProfileView.vue';
+import ChangePasswordView from '../views/ChangePasswordView.vue';
 import AdminDashboardView from '../views/admin/AdminDashboardView.vue';
 import AdminUsersView from '../views/admin/AdminUsersView.vue';
 import AdminLieuxView from '../views/admin/AdminLieuxView.vue';
@@ -18,6 +21,16 @@ const router = createRouter({
     { path: '/lieux/:id/editer', name: 'lieu-edit', component: LieuFormView, meta: { auth: true } },
     { path: '/login', name: 'login', component: LoginView },
     { path: '/register', name: 'register', component: RegisterView },
+    {
+      path: '/compte',
+      component: AccountLayout,
+      meta: { auth: true },
+      children: [
+        { path: '', redirect: { name: 'account-profile' } },
+        { path: 'profil', name: 'account-profile', component: AccountProfileView },
+        { path: 'mot-de-passe', name: 'change-password', component: ChangePasswordView },
+      ],
+    },
     {
       path: '/admin',
       name: 'admin-dashboard',

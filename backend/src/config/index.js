@@ -27,4 +27,5 @@ export const config = {
     ''
   ),
   adminEmail: (process.env.ADMIN_EMAIL || 'gatien.duboc@gmail.com').toLowerCase(),
+  adminDefaultPassword: process.env.ADMIN_DEFAULT_PASSWORD || 'password123',
 };

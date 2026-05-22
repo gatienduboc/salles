@@ -113,6 +113,12 @@ Booléens : `true`, `false` ou `null` (inconnu).
 
 `GET /auth/me` — profil courant (inclut `role`).
 
+`GET /auth/me` — profil enrichi : `lieux_count`, `lieux_counts`, `created_at`.
+
+`PATCH /auth/profile` — JWT : `{ pseudo }` uniquement (email non modifiable). Retourne profil + nouveau `token`.
+
+`PATCH /auth/password` — JWT requis : `{ currentPassword, newPassword }` (min 8 caractères).
+
 Compte admin initial : email `ADMIN_EMAIL` (défaut `gatien.duboc@gmail.com`), promu par migration.
 
 ## Photos

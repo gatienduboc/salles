@@ -18,7 +18,7 @@ onMounted(() => {
     <RouterLink v-if="auth.isAdmin" to="/admin">Administration</RouterLink>
     <span style="margin-left: auto" />
     <template v-if="auth.isLoggedIn">
-      <span>{{ auth.user?.pseudo }}</span>
+      <RouterLink to="/compte">{{ auth.user?.pseudo }}</RouterLink>
       <button class="btn secondary" @click="auth.logout()">Déconnexion</button>
     </template>
     <template v-else>

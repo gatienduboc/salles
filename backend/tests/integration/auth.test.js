@@ -51,4 +51,55 @@ describe('Auth API', () => {
     const res = await request(app).post('/auth/logout');
     expect(res.status).toBe(204);
   });
+
+  it('PATCH /auth/profile met à jour le pseudo', async () => {
+    const email = `prof-${Date.now()}@test.local`;
+    const reg = await request(app)
+      .post('/auth/register')
+      .send({ email, password: 'password123', pseudo: 'Ancien' });
+    const token = reg.body.token;
+
+    const res = await request(app)
+      .patch('/auth/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ pseudo: 'Nouveau Pseudo' });
+    expect(res.status).toBe(200);
+    expect(res.body.pseudo).toBe('Nouveau Pseudo');
+    expect(res.body.email).toBe(email);
+    expect(res.body.token).toBeDefined();
+
+    const me = await request(app).get('/auth/me').set('Authorization', `Bearer ${res.body.token}`);
+    expect(me.body.pseudo).toBe('Nouveau Pseudo');
+    expect(me.body).toHaveProperty('lieux_count');
+  });
+
+  it('PATCH /auth/password change le mot de passe', async () => {
+    const email = `pwd-${Date.now()}@test.local`;
+    const reg = await request(app)
+      .post('/auth/register')
+      .send({ email, password: 'password123', pseudo: 'PwdUser' });
+    const token = reg.body.token;
+
+    const bad = await request(app)
+      .patch('/auth/password')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ currentPassword: 'wrong', newPassword: 'newpass123' });
+    expect(bad.status).toBe(401);
+
+    const ok = await request(app)
+      .patch('/auth/password')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ currentPassword: 'password123', newPassword: 'newpass123' });
+    expect(ok.status).toBe(204);
+
+    const loginOld = await request(app)
+      .post('/auth/login')
+      .send({ email, password: 'password123' });
+    expect(loginOld.status).toBe(401);
+
+    const loginNew = await request(app)
+      .post('/auth/login')
+      .send({ email: email.toUpperCase(), password: 'newpass123' });
+    expect(loginNew.status).toBe(200);
+  });
 });

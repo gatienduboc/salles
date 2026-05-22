@@ -14,6 +14,13 @@ export const useAuthStore = defineStore('auth', () => {
     const me = await api('/auth/me');
     user.value = me;
     persist();
+    return me;
+  }
+
+  function setSession(newToken, newUser) {
+    token.value = newToken;
+    user.value = newUser;
+    persist();
   }
 
   function persist() {
@@ -55,5 +62,5 @@ export const useAuthStore = defineStore('auth', () => {
     api('/auth/logout', { method: 'POST' }).catch(() => {});
   }
 
-  return { token, user, isLoggedIn, isAdmin, register, login, logout, refreshUser };
+  return { token, user, isLoggedIn, isAdmin, register, login, logout, refreshUser, setSession };
 });

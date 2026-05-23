@@ -13,6 +13,8 @@
     "seed:est": "knex seed:run --specific=003_lieux_est.js",
     "seed:admin-password": "knex seed:run --specific=005_reset_admin_password.js",
     "geocode:est": "node scripts/geocode-est.js",
+    "geocode:all": "node scripts/geocode-all.js",
+    "geocode:all:force": "node scripts/geocode-all.js --force",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

@@ -1,4 +1,5 @@
 import { config } from '../config/index.js';
+import { geocodeLieuWithGoogle } from './googleGeocoding.js';
 
 let lastRequestAt = 0;
 
@@ -96,6 +97,35 @@ export async function searchAddressSuggestions(query, options = {}) {
   return { suggestions, error: error || null };
 }
 
+/** Requête géocodage d’un lieu : nom + adresse (évite les homonymes de villes). */
+export function buildLieuGeocodeQuery(nom, adresse) {
+  const parts = [nom, adresse].map((s) => String(s || '').trim()).filter(Boolean);
+  return parts.join(', ');
+}
+
+/** Géocode un lieu (Google Maps si clé API, sinon Nominatim sur nom + adresse). */
+export async function geocodeLieu(nom, adresse, options = {}) {
+  const query = buildLieuGeocodeQuery(nom, adresse);
+  if (query.length < 3) {
+    return { error: 'Nom ou adresse trop court' };
+  }
+
+  const useGoogle =
+    options.provider === 'google' ||
+    (options.provider !== 'nominatim' && config.googleMaps.apiKey);
+
+  if (useGoogle) {
+    const google = await geocodeLieuWithGoogle(nom, adresse, options);
+    if (!google.error || options.provider === 'google') {
+      return google;
+    }
+  }
+
+  const countrycodes =
+    adresse?.includes('Deutschland') || adresse?.includes('Allemagne') ? 'de,fr' : 'fr';
+  return geocodeAddress(query, { ...options, countrycodes });
+}
+
 export async function geocodeAddress(adresse, options = {}) {
   const { data, error } = await nominatimSearch(
     {
@@ -149,18 +179,30 @@ export async function geocodeLieuIfNeeded(db, lieuId, adresse, previousAdresse, 
   const existing = await db('lieux').where({ id: lieuId }).first();
   if (!existing) return;
 
-  if (previousAdresse && previousAdresse === adresse && existing.geocoded_at) {
+  if (
+    !options.force &&
+    previousAdresse &&
+    previousAdresse === adresse &&
+    existing.geocoded_at
+  ) {
     return;
   }
 
-  const result = await geocodeAddress(adresse, options);
+  const result = await geocodeLieu(existing.nom, adresse, options);
   const patch = result.error
-    ? { geocode_error: result.error, geocoded_at: null }
+    ? {
+        geocode_error: result.error,
+        geocoded_at: null,
+        google_place_id: null,
+        google_maps_url: null,
+      }
     : {
         latitude: result.latitude,
         longitude: result.longitude,
         ville: result.ville,
         code_postal: result.code_postal,
+        google_place_id: result.google_place_id ?? null,
+        google_maps_url: result.google_maps_url ?? null,
         geocoded_at: result.geocoded_at,
         geocode_error: null,
       };

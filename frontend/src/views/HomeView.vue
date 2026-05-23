@@ -9,6 +9,7 @@ import LieuFilters from '../components/LieuFilters.vue';
 import LieuPagination from '../components/LieuPagination.vue';
 import LieuTypeBadge from '../components/LieuTypeBadge.vue';
 import LieuVote from '../components/LieuVote.vue';
+import LieuNavigationLinks from '../components/LieuNavigationLinks.vue';
 import {
   queryFromRoute,
   queryToRouteParams,
@@ -285,6 +286,7 @@ watch(() => filters.value.radius_km, scheduleRadiusUrlSync);
       <LieuTypeBadge :type="l.type" />
     </div>
     <p>{{ l.adresse }}</p>
+    <LieuNavigationLinks :lieu="l" compact />
     <LieuVote
       :lieu-id="l.id"
       :rating="l.rating"

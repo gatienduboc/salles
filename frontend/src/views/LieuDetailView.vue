@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/auth.js';
 import LieuMap from '../components/LieuMap.vue';
 import LieuTypeBadge from '../components/LieuTypeBadge.vue';
 import LieuVote from '../components/LieuVote.vue';
+import LieuNavigationLinks from '../components/LieuNavigationLinks.vue';
 
 const route = useRoute();
 const auth = useAuthStore();
@@ -46,6 +47,12 @@ onMounted(load);
       <LieuTypeBadge :type="lieu.type" />
     </div>
     <p>{{ lieu.adresse }}</p>
+    <p v-if="lieu.google_place_id" class="google-place-note">
+      <a :href="lieu.google_maps_url" target="_blank" rel="noopener noreferrer">
+        Fiche établissement Google Maps
+      </a>
+    </p>
+    <LieuNavigationLinks :lieu="lieu" />
     <div class="card">
       <LieuVote
         :lieu-id="lieu.id"

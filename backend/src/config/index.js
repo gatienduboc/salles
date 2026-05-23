@@ -20,6 +20,11 @@ export const config = {
     timeoutMs: Number(process.env.NOMINATIM_TIMEOUT_MS || 5000),
     minIntervalMs: Number(process.env.NOMINATIM_MIN_INTERVAL_MS || 1100),
   },
+  googleMaps: {
+    apiKey: process.env.GOOGLE_MAPS_API_KEY || '',
+    timeoutMs: Number(process.env.GOOGLE_MAPS_TIMEOUT_MS || 8000),
+    minIntervalMs: Number(process.env.GOOGLE_MAPS_MIN_INTERVAL_MS || 250),
+  },
   apiPublicUrl: process.env.API_PUBLIC_URL || 'http://localhost:3000',
   /** URLs photos (/uploads), sans suffixe /api */
   sitePublicUrl: (process.env.SITE_PUBLIC_URL || process.env.API_PUBLIC_URL || 'http://localhost:3000').replace(

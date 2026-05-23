@@ -405,6 +405,75 @@ label {
   text-decoration: underline;
 }
 
+.map-preview-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  margin: 0.5rem 0 0.35rem;
+}
+
+.map-preview-nav-link {
+  font-size: 0.75rem;
+  color: var(--accent-soft);
+  text-decoration: none;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.map-preview-nav-link:hover {
+  color: var(--accent);
+  border-color: var(--accent-soft);
+}
+
+.lieu-nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.lieu-nav-links--compact {
+  margin: 0.25rem 0 0.75rem;
+  gap: 0.35rem;
+}
+
+.lieu-nav-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-right: 0.15rem;
+}
+
+.lieu-nav-btn {
+  font-size: 0.8rem;
+  color: var(--text);
+  text-decoration: none;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #12151c;
+}
+
+.lieu-nav-btn:hover {
+  border-color: var(--accent-soft);
+  color: var(--accent-soft);
+}
+
+.lieu-nav-links--compact .lieu-nav-btn {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+}
+
+.google-place-note {
+  margin: -0.5rem 0 0.75rem;
+  font-size: 0.9rem;
+}
+
+.google-place-note a {
+  color: var(--accent-soft);
+}
+
 .legend-dot {
   display: inline-block;
   width: 10px;

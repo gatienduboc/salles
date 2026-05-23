@@ -291,17 +291,20 @@ export async function bulkDeleteLieux(knexDb, ids) {
 export async function bulkGeocodeLieux(knexDb, ids, options = {}) {
   let rows;
   if (ids.length) {
-    rows = await knexDb('lieux').whereIn('id', ids).select('id', 'adresse');
+    rows = await knexDb('lieux').whereIn('id', ids).select('id', 'nom', 'adresse');
   } else {
     rows = await knexDb('lieux')
       .where((b) => b.whereNull('latitude').orWhereNull('longitude'))
-      .select('id', 'adresse')
+      .select('id', 'nom', 'adresse')
       .limit(BULK_MAX);
   }
 
   const results = { ok: 0, failed: 0, ids: [] };
   for (const row of rows) {
-    await geocodeLieuIfNeeded(knexDb, row.id, row.adresse, null, options);
+    await geocodeLieuIfNeeded(knexDb, row.id, row.adresse, null, {
+      ...options,
+      force: options.force,
+    });
     const updated = await knexDb('lieux').where({ id: row.id }).first();
     if (updated.geocode_error) results.failed += 1;
     else results.ok += 1;

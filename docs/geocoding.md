@@ -1,27 +1,46 @@
-# Géocodage (Nominatim)
+# Géocodage
+
+## Lieux (nom + adresse)
+
+Chaque lieu est géocodé avec **`nom` + `adresse`** (ex. `CCA Châtenois, 4 Rue Saint-Georges, 67730 Châtenois`) pour éviter les homonymes (Châtenois 67 vs 88).
+
+**Provider :**
+
+1. **Google Maps** si `GOOGLE_MAPS_API_KEY` est défini (Places Text Search, puis Geocoding API)
+2. Sinon **Nominatim** sur la même requête combinée
+
+Re-géocoder toute la base :
+
+```bash
+cd backend
+npm run geocode:all:force
+```
 
 ## Saisie (formulaire)
 
-- `GET /address/suggest?q=...` (min. 3 caractères) : suggestions OpenStreetMap via le serveur (respect du débit Nominatim).
-- Le champ adresse du formulaire propose une liste au fil de la saisie ; choisir une ligne remplit l’adresse complète pour un géocodage fiable.
+- `GET /address/suggest?q=...` : suggestions OpenStreetMap (autocomplétion adresse uniquement).
 
 ## Déclenchement
 
 - Création ou modification d’un lieu si l’`adresse` change
 - `POST /lieux/:id/geocode` pour forcer un retry
+- Admin : bulk géocode
 
-## Politique OSM
+## Variables d’environnement
 
-- User-Agent obligatoire (`NOMINATIM_USER_AGENT`)
-- ~1 requête/seconde (file côté serveur)
-- Cache : pas de nouvel appel si adresse inchangée et `geocoded_at` présent
+| Variable | Rôle |
+|----------|------|
+| `GOOGLE_MAPS_API_KEY` | Géocodage lieux via Google (recommandé) |
+| `NOMINATIM_USER_AGENT` | Fallback OSM + suggestions adresse |
 
 ## Champs remplis
 
 `latitude`, `longitude`, `ville`, `code_postal`, `geocoded_at` ou `geocode_error`
 
+Avec Google : `google_place_id` (lien fiche établissement, exposé en API comme `google_maps_url`).
+
 ## Dépannage
 
-- Vérifier l’adresse (format postal complet, France)
+- Adresse complète avec code postal (éviter « Châtenois, Vosges » seul)
 - Consulter `geocode_error` sur la fiche
-- Relancer via PUT avec adresse corrigée ou `POST /lieux/:id/geocode`
+- `npm run geocode:all:force` après correction d’adresses en base

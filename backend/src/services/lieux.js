@@ -2,6 +2,7 @@ import { config } from '../config/index.js';
 import { db } from '../db/knex.js';
 import { formatPublicAuthor, getActivityLabel } from './userProfile.js';
 import { applyRadiusFilter, resolveMapCenter } from '../utils/geo.js';
+import { googleMapsPlaceUrl } from '../utils/googleMapsUrl.js';
 
 const MAP_MAX = 500;
 
@@ -53,6 +54,8 @@ const LIEU_COLUMNS = [
   'lieux.code_postal',
   'lieux.geocoded_at',
   'lieux.geocode_error',
+  'lieux.google_place_id',
+  'lieux.google_maps_url',
   'lieux.created_at',
   'lieux.updated_at',
   'users.pseudo as auteur_pseudo',
@@ -98,6 +101,9 @@ export function formatLieu(row, photos = []) {
     code_postal: row.code_postal,
     geocoded_at: row.geocoded_at,
     geocode_error: row.geocode_error,
+    google_place_id: row.google_place_id || null,
+    google_maps_url:
+      row.google_maps_url || googleMapsPlaceUrl(row.google_place_id, row.nom),
     created_at: row.created_at,
     updated_at: row.updated_at,
     photos: photos.map((p) => ({
@@ -126,6 +132,7 @@ export function formatLieuMapMarker(row, photo = null) {
     commentaire: truncateText(row.commentaire, 160),
     latitude: Number(row.latitude),
     longitude: Number(row.longitude),
+    google_place_id: row.google_place_id || null,
     photo_url: photo
       ? `${config.sitePublicUrl}/uploads/${photo.filename}`
       : null,

@@ -176,7 +176,7 @@ const LIEUX_EST = [
   },
   {
     nom: 'CCA Châtenois',
-    adresse: '88140 Châtenois, Vosges, France',
+    adresse: '4 Rue Saint-Georges, 67730 Châtenois, France',
     ville: 'Châtenois',
     type: 'blacklist',
     commentaire: 'CCA — Cercle catholique d\'action.',
@@ -191,7 +191,7 @@ const LIEUX_EST = [
   },
   {
     nom: 'Châtenois — salle des ferrants',
-    adresse: 'Salle des fêtes, Châtenois, 88140, France',
+    adresse: 'Salle des fêtes, 4 Rue Saint-Georges, 67730 Châtenois, France',
     ville: 'Châtenois',
     type: 'blacklist',
     commentaire: 'Noté « thiserrants » — contraintes décibel à vérifier.',

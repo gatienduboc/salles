@@ -1,4 +1,5 @@
 import { getLieuType } from '../constants/lieuTypes.js';
+import { buildMapNavigationHtml } from './navigationLinks.js';
 
 const RATING_BASELINE = 5;
 
@@ -41,6 +42,7 @@ export function buildMapPreviewHtml(l) {
       ${adresse ? `<p class="map-preview-addr">${adresse}</p>` : ''}
       <p class="map-preview-rating">${ratingLine}</p>
       ${comment ? `<p class="map-preview-comment">${comment}</p>` : ''}
+      ${buildMapNavigationHtml(l)}
       <a class="map-preview-link" href="/lieux/${l.id}">Voir la fiche →</a>
     </div>
   </div>`;

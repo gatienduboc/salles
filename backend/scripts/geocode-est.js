@@ -5,7 +5,7 @@
  */
 import 'dotenv/config';
 import { db } from '../src/db/knex.js';
-import { geocodeAddress } from '../src/services/geocoding.js';
+import { geocodeLieu } from '../src/services/geocoding.js';
 
 const DELAY_MS = 1100;
 
@@ -28,11 +28,7 @@ async function main() {
   console.log(`${rows.length} lieu(x) à géocoder…`);
   for (const lieu of rows) {
     try {
-      const opts =
-        lieu.adresse.includes('Deutschland') || lieu.adresse.includes('Allemagne')
-          ? { countrycodes: 'de,fr' }
-          : {};
-      const result = await geocodeAddress(lieu.adresse, opts);
+      const result = await geocodeLieu(lieu.nom, lieu.adresse);
       if (result.error) {
         await db('lieux').where({ id: lieu.id }).update({
           geocode_error: result.error,
@@ -45,6 +41,8 @@ async function main() {
           longitude: result.longitude,
           ville: result.ville ?? null,
           code_postal: result.code_postal ?? null,
+          google_place_id: result.google_place_id ?? null,
+          google_maps_url: result.google_maps_url ?? null,
           geocoded_at: db.fn.now(),
           geocode_error: null,
           updated_at: db.fn.now(),

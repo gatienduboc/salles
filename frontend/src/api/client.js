@@ -18,7 +18,11 @@ export async function api(path, options = {}) {
   if (res.status === 204) return null;
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const err = new Error(data.error || res.statusText);
+    let message = data.error || res.statusText;
+    if (!message || (res.status >= 500 && /sql|unknown column|ER_/i.test(message))) {
+      message = 'Une erreur est survenue. Réessayez plus tard.';
+    }
+    const err = new Error(message);
     err.status = res.status;
     err.data = data;
     throw err;

@@ -10,6 +10,8 @@ export async function createUser(overrides = {}) {
     password_hash,
     pseudo: pseudo || 'TestUser',
     role: 'user',
+    activity: 'dj',
+    city: 'Lyon',
     ...rest,
   });
   const user = await testDb('users').where({ id }).first();

@@ -16,6 +16,9 @@ Base URL : `http://localhost:3000` (dev) ou `https://salle.example.fr/api` (prod
 | POST | `/auth/register` | Non |
 | POST | `/auth/login` | Non |
 | POST | `/auth/logout` | Non (204) |
+| GET | `/auth/me` | JWT |
+| PATCH | `/auth/profile` | JWT |
+| PATCH | `/auth/password` | JWT |
 
 ## Lieux
 
@@ -83,6 +86,14 @@ Mêmes filtres que la liste (`type`, `ville`, `search`, etc.) + `sort` / `order`
 
 Retourne uniquement les lieux avec coordonnées. Plafond 500 (`meta.capped` si dépassement).
 
+| Param | Description |
+|-------|-------------|
+| `radius_km` | 1–500 : lieux dans ce rayon (km) autour du centre |
+| (JWT) | Centre = ville d’exercice géocodée du compte |
+| `center_lat`, `center_lon` | Centre explicite (optionnel) |
+
+Réponse `meta.radius_center` et `meta.radius_km` si filtre actif.
+
 ```json
 {
   "data": [{
@@ -136,13 +147,23 @@ Booléens : `true`, `false` ou `null` (inconnu).
 | DELETE | `/admin/lieux/bulk` | `{ ids }` max 50 |
 | POST | `/admin/geocode/bulk` | `{ ids? }` ou lot sans coords (50 max) |
 
-`GET /auth/me` — profil courant (inclut `role`).
+### POST /auth/register
 
-`GET /auth/me` — profil enrichi : `lieux_count`, `lieux_counts`, `created_at`.
+Obligatoire : `email`, `password` (8+), `pseudo`, `activity`, `city` (géocodée à l’enregistrement). Optionnel : `postal_code`, `company_name`.
 
-`PATCH /auth/profile` — JWT : `{ pseudo }` uniquement (email non modifiable). Retourne profil + nouveau `token`.
+### GET /auth/me
 
-`PATCH /auth/password` — JWT requis : `{ currentPassword, newPassword }` (min 8 caractères).
+Profil complet : champs prestataire + `lieux_count`, `lieux_counts`, `profile_completion` (%).
+
+### PATCH /auth/profile
+
+Champs modifiables : `pseudo`, `activity`, `city`, `postal_code` (ville re-géocodée si changement), `company_name`, `siret` (SIREN 9 ou SIRET 14 chiffres, clé Luhn), `phone`, `website_url`, `bio`, `intervention_radius_km`, `has_rc_pro` (bool ou `null`). Email non modifiable. Retourne profil + nouveau `token`.
+
+Objet `auteur` sur les lieux (public) : `{ id, pseudo, activity, activity_label, city }`.
+
+### PATCH /auth/password
+
+JWT requis : `{ currentPassword, newPassword }` (min 8 caractères).
 
 Compte admin initial : email `ADMIN_EMAIL` (défaut `gatien.duboc@gmail.com`), promu par migration.
 

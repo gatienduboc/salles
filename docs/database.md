@@ -8,6 +8,13 @@ Migrations Knex dans `backend/migrations/`.
 
 `id`, `email`, `password_hash`, `pseudo`, `role` (`user`|`admin`), `created_at`
 
+Profil prestataire :
+
+- `activity` (enum : dj, traiteur, wedding_planner, photographe, fleuriste, animation, sonorisation, lieu, autre)
+- `city`, `postal_code`, `city_latitude`, `city_longitude`, `city_geocoded_at` — ville d’exercice **géocodée** ; `city` / `postal_code` publics sur les fiches lieu
+- `company_name`, `siret`, `phone`, `website_url`, `bio`, `intervention_radius_km`, `has_rc_pro` — privés (espace compte)
+- `profile_updated_at`
+
 ### lieux
 
 Champs métier + géocodage :

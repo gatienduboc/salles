@@ -35,6 +35,13 @@ function tabCount(value) {
   if (!value) return totalCount();
   return props.counts[value] || 0;
 }
+
+function auteurLabel(a) {
+  const parts = [a.pseudo];
+  if (a.activity_label) parts.push(a.activity_label);
+  if (a.city) parts.push(a.city);
+  return `${parts.join(' · ')} (${a.count})`;
+}
 </script>
 
 <template>
@@ -63,12 +70,12 @@ function tabCount(value) {
         <select v-model="model.auteur_id" data-testid="filter-auteur" @change="apply">
           <option value="">Tous les auteurs</option>
           <option v-for="a in auteurs" :key="a.id" :value="a.id">
-            {{ a.pseudo }} ({{ a.count }})
+            {{ auteurLabel(a) }}
           </option>
         </select>
       </div>
       <div class="filter-field">
-        <label>Ville</label>
+        <label>Ville du lieu</label>
         <input
           v-model="model.ville"
           placeholder="Paris, Lyon…"

@@ -124,6 +124,27 @@ export async function geocodeAddress(adresse, options = {}) {
   };
 }
 
+/** Géocode la ville d'exercice d'un prestataire (France). */
+export async function geocodeProviderCity(city, postalCode, options = {}) {
+  const cityTrim = String(city || '').trim();
+  if (cityTrim.length < 2) {
+    return { error: 'Ville trop courte' };
+  }
+  const q = [postalCode, cityTrim, 'France'].filter(Boolean).join(', ');
+  const result = await geocodeAddress(q, options);
+  if (result.error) return result;
+  if (!result.ville) {
+    return { error: 'Ville introuvable — choisissez une suggestion ou vérifiez l’orthographe' };
+  }
+  return {
+    city: result.ville,
+    postal_code: result.code_postal || postalCode || null,
+    city_latitude: result.latitude,
+    city_longitude: result.longitude,
+    city_geocoded_at: result.geocoded_at,
+  };
+}
+
 export async function geocodeLieuIfNeeded(db, lieuId, adresse, previousAdresse, options = {}) {
   const existing = await db('lieux').where({ id: lieuId }).first();
   if (!existing) return;

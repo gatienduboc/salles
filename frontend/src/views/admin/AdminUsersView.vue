@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { api } from '../../api/client.js';
 import AdminLayout from '../../components/AdminLayout.vue';
+import { PROVIDER_ACTIVITIES } from '../../constants/providerActivities.js';
 
 const users = ref([]);
 const meta = ref({ page: 1, totalPages: 1 });
@@ -9,7 +10,7 @@ const search = ref('');
 const error = ref('');
 const message = ref('');
 
-const form = ref({ email: '', pseudo: '', password: '' });
+const form = ref({ email: '', pseudo: '', password: '', activity: 'dj', city: '' });
 const showCreate = ref(false);
 
 async function load(page = 1) {
@@ -29,7 +30,7 @@ async function createUser() {
     });
     message.value = 'Compte créé.';
     showCreate.value = false;
-    form.value = { email: '', pseudo: '', password: '' };
+    form.value = { email: '', pseudo: '', password: '', activity: 'dj', city: '' };
     await load();
   } catch (e) {
     error.value = e.message;
@@ -93,11 +94,19 @@ onMounted(() => load());
     </div>
 
     <form v-if="showCreate" class="card" @submit.prevent="createUser">
-      <h3>Créer un compte (DJ)</h3>
+      <h3>Créer un compte prestataire</h3>
       <label>Email</label>
       <input v-model="form.email" type="email" required />
       <label>Pseudo</label>
       <input v-model="form.pseudo" required />
+      <label>Secteur</label>
+      <select v-model="form.activity">
+        <option v-for="a in PROVIDER_ACTIVITIES" :key="a.value" :value="a.value">
+          {{ a.label }}
+        </option>
+      </select>
+      <label>Ville</label>
+      <input v-model="form.city" required placeholder="Lyon" />
       <label>Mot de passe</label>
       <input v-model="form.password" type="password" minlength="8" required />
       <button class="btn" type="submit">Créer</button>
@@ -108,7 +117,10 @@ onMounted(() => load());
         <thead>
           <tr>
             <th>Pseudo</th>
+            <th>Secteur</th>
+            <th>Ville</th>
             <th>Email</th>
+            <th>SIRET</th>
             <th>Rôle</th>
             <th>Fiches</th>
             <th>Actions</th>
@@ -117,7 +129,10 @@ onMounted(() => load());
         <tbody>
           <tr v-for="u in users" :key="u.id">
             <td>{{ u.pseudo }}</td>
+            <td>{{ u.activity_label || '—' }}</td>
+            <td>{{ u.city || '—' }}</td>
             <td>{{ u.email }}</td>
+            <td>{{ u.siret_masked || '—' }}</td>
             <td>{{ u.role }}</td>
             <td>{{ u.lieux_count }}</td>
             <td class="admin-actions">

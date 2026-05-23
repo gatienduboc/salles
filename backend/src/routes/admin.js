@@ -56,7 +56,7 @@ router.post(
   async (req, res, next) => {
     try {
       if (!validate(req, res)) return;
-      const user = await createAdminUser(db, req.body);
+      const user = await createAdminUser(db, req.body, req.geocodeOptions);
       res.status(201).json(await formatAdminUserRow(db, user));
     } catch (err) {
       if (err.status) return res.status(err.status).json({ error: err.message });

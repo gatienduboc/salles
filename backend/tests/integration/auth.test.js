@@ -3,6 +3,15 @@ import request from 'supertest';
 import { getTestApp } from '../helpers/app.js';
 import { resetDatabase, closeDatabase } from '../helpers/db.js';
 
+const registerBody = (overrides = {}) => ({
+  email: `user-${Date.now()}@test.local`,
+  password: 'password123',
+  pseudo: 'TestUser',
+  activity: 'dj',
+  city: 'Lyon',
+  ...overrides,
+});
+
 describe('Auth API', () => {
   let app;
 
@@ -20,7 +29,7 @@ describe('Auth API', () => {
 
     const reg = await request(app)
       .post('/auth/register')
-      .send({ email, password: 'password123', pseudo: 'TestUser' });
+      .send(registerBody({ email, pseudo: 'TestUser' }));
 
     expect(reg.status).toBe(201);
     expect(reg.body.token).toBeDefined();
@@ -36,13 +45,9 @@ describe('Auth API', () => {
 
   it('email dupliqué → 409', async () => {
     const email = `dup-${Date.now()}@test.local`;
-    await request(app)
-      .post('/auth/register')
-      .send({ email, password: 'password123', pseudo: 'UserA' });
+    await request(app).post('/auth/register').send(registerBody({ email, pseudo: 'UserA' }));
 
-    const res = await request(app)
-      .post('/auth/register')
-      .send({ email, password: 'password123', pseudo: 'UserB' });
+    const res = await request(app).post('/auth/register').send(registerBody({ email, pseudo: 'UserB' }));
 
     expect(res.status).toBe(409);
   });
@@ -56,7 +61,7 @@ describe('Auth API', () => {
     const email = `prof-${Date.now()}@test.local`;
     const reg = await request(app)
       .post('/auth/register')
-      .send({ email, password: 'password123', pseudo: 'Ancien' });
+      .send(registerBody({ email, pseudo: 'Ancien' }));
     const token = reg.body.token;
 
     const res = await request(app)
@@ -71,13 +76,23 @@ describe('Auth API', () => {
     const me = await request(app).get('/auth/me').set('Authorization', `Bearer ${res.body.token}`);
     expect(me.body.pseudo).toBe('Nouveau Pseudo');
     expect(me.body).toHaveProperty('lieux_count');
+    expect(me.body.activity).toBe('dj');
+    expect(me.body.city).toBeTruthy();
+    expect(me.body.city_geocoded_at).toBeTruthy();
+  });
+
+  it('register sans secteur → 400', async () => {
+    const res = await request(app)
+      .post('/auth/register')
+      .send({ email: `x-${Date.now()}@t.local`, password: 'password123', pseudo: 'X' });
+    expect(res.status).toBe(400);
   });
 
   it('PATCH /auth/password change le mot de passe', async () => {
     const email = `pwd-${Date.now()}@test.local`;
     const reg = await request(app)
       .post('/auth/register')
-      .send({ email, password: 'password123', pseudo: 'PwdUser' });
+      .send(registerBody({ email, pseudo: 'PwdUser' }));
     const token = reg.body.token;
 
     const bad = await request(app)

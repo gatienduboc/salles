@@ -57,7 +57,11 @@ router.get(
 
 router.get('/lieux', optionalAuthenticateJWT, async (req, res, next) => {
   try {
-    const result = await listLieux(db, req.query);
+    let profileUser = null;
+    if (req.user?.id) {
+      profileUser = await db('users').where({ id: req.user.id }).first();
+    }
+    const result = await listLieux(db, req.query, profileUser);
     res.json(await enrichListResult(result, req.user?.id));
   } catch (err) {
     next(err);
@@ -66,7 +70,11 @@ router.get('/lieux', optionalAuthenticateJWT, async (req, res, next) => {
 
 router.get('/lieux/map', optionalAuthenticateJWT, async (req, res, next) => {
   try {
-    const result = await listLieuxForMap(db, req.query);
+    let profileUser = null;
+    if (req.user?.id) {
+      profileUser = await db('users').where({ id: req.user.id }).first();
+    }
+    const result = await listLieuxForMap(db, req.query, profileUser);
     res.json(await enrichListResult(result, req.user?.id));
   } catch (err) {
     next(err);

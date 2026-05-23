@@ -3,11 +3,16 @@ export const DEFAULT_LIST_QUERY = {
   ville: '',
   search: '',
   auteur_id: '',
+  radius_km: '',
   sort: 'updated_at',
   order: 'desc',
   page: 1,
   limit: 20,
 };
+
+export const RADIUS_KM_MIN = 5;
+export const RADIUS_KM_MAX = 500;
+export const RADIUS_KM_DEFAULT = 80;
 
 export const SORT_OPTIONS = [
   { value: 'updated_at', label: 'Dernière mise à jour' },
@@ -30,6 +35,10 @@ export function queryFromRoute(routeQuery) {
       const id = parseInt(q.auteur_id, 10);
       return id > 0 ? id : '';
     })(),
+    radius_km: (() => {
+      const r = parseInt(q.radius_km, 10);
+      return r >= RADIUS_KM_MIN && r <= RADIUS_KM_MAX ? r : '';
+    })(),
     sort: typeof q.sort === 'string' ? q.sort : DEFAULT_LIST_QUERY.sort,
     order: q.order === 'asc' ? 'asc' : 'desc',
     page: Math.max(1, parseInt(q.page, 10) || 1),
@@ -43,6 +52,7 @@ export function queryToRouteParams(state) {
   if (state.ville) q.ville = state.ville;
   if (state.search) q.search = state.search;
   if (state.auteur_id) q.auteur_id = String(state.auteur_id);
+  if (state.radius_km) q.radius_km = String(state.radius_km);
   if (state.sort !== DEFAULT_LIST_QUERY.sort) q.sort = state.sort;
   if (state.order !== DEFAULT_LIST_QUERY.order) q.order = state.order;
   if (state.page > 1) q.page = String(state.page);
@@ -50,12 +60,22 @@ export function queryToRouteParams(state) {
   return q;
 }
 
-export function buildApiParams(state, { forMap = false, omitAuteur = false } = {}) {
+export function buildApiParams(
+  state,
+  { forMap = false, omitAuteur = false, mapCenter = null } = {}
+) {
   const params = new URLSearchParams();
   if (state.type) params.set('type', state.type);
   if (state.ville) params.set('ville', state.ville);
   if (state.search) params.set('search', state.search);
   if (!omitAuteur && state.auteur_id) params.set('auteur_id', String(state.auteur_id));
+  if (state.radius_km) {
+    params.set('radius_km', String(state.radius_km));
+    if (mapCenter?.latitude != null && mapCenter?.longitude != null) {
+      params.set('center_lat', String(mapCenter.latitude));
+      params.set('center_lon', String(mapCenter.longitude));
+    }
+  }
   params.set('sort', state.sort);
   params.set('order', state.order);
   if (!forMap) {

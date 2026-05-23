@@ -1,5 +1,7 @@
 import { config } from '../config/index.js';
 import { db } from '../db/knex.js';
+import { formatPublicAuthor, getActivityLabel } from './userProfile.js';
+import { applyRadiusFilter, resolveMapCenter } from '../utils/geo.js';
 
 const MAP_MAX = 500;
 
@@ -54,6 +56,8 @@ const LIEU_COLUMNS = [
   'lieux.created_at',
   'lieux.updated_at',
   'users.pseudo as auteur_pseudo',
+  'users.activity as auteur_activity',
+  'users.city as auteur_city',
 ];
 
 export function pickLieuBody(body) {
@@ -65,8 +69,7 @@ export function pickLieuBody(body) {
 }
 
 export function formatAuteur(row) {
-  if (!row?.auteur_id) return null;
-  return { id: row.auteur_id, pseudo: row.auteur_pseudo || null };
+  return formatPublicAuthor(row);
 }
 
 export function formatLieu(row, photos = []) {
@@ -210,16 +213,26 @@ export async function getCounts(query) {
   return counts;
 }
 
-export async function listLieux(knexDb, query) {
+export async function listLieux(knexDb, query, profileUser = null) {
   const page = Math.max(1, parseInt(query.page, 10) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 20));
   const offset = (page - 1) * limit;
   const { sort, order, column } = parseSort(query);
 
+  const radius = resolveMapCenter(query, profileUser);
+  if (radius?.error) {
+    const err = new Error(radius.error);
+    err.status = 400;
+    throw err;
+  }
+
   let q = knexDb('lieux')
     .leftJoin('users', 'lieux.auteur_id', 'users.id')
     .select(LIEU_COLUMNS);
   q = applyFilters(q, query);
+  if (radius) {
+    q = applyRadiusFilter(q, radius.lat, radius.lon, radius.radiusKm);
+  }
 
   const countQuery = q.clone().clearSelect().count({ total: '*' }).first();
   const rows = await q.orderBy(column, order).limit(limit).offset(offset);
@@ -227,35 +240,55 @@ export async function listLieux(knexDb, query) {
   const counts = await getCounts(query);
   const totalNum = Number(total);
 
+  const meta = buildListMeta({ page, limit, total: totalNum, sort, order, counts });
+  if (radius) {
+    meta.radius_km = radius.radiusKm;
+    meta.radius_center = {
+      latitude: radius.lat,
+      longitude: radius.lon,
+      city: radius.cityLabel,
+    };
+  }
+
   return {
     data: rows.map((r) => formatLieu(r, [])),
-    meta: buildListMeta({ page, limit, total: totalNum, sort, order, counts }),
+    meta,
   };
 }
 
 export async function listLieuxAuteurs(knexDb, query) {
-  const { auteur_id: _omit, page: _p, limit: _l, sort: _s, order: _o, ...filterQuery } =
-    query;
+  const { auteur_id: _omit, page: _p, limit: _l, sort: _s, order: _o, ...filterQuery } = query;
 
   let q = knexDb('lieux')
     .join('users', 'lieux.auteur_id', 'users.id')
-    .select('users.id', 'users.pseudo')
+    .select('users.id', 'users.pseudo', 'users.activity', 'users.city')
     .count({ count: '*' });
   q = applyFilters(q, filterQuery);
 
-  const rows = await q.groupBy('users.id', 'users.pseudo').orderBy('users.pseudo', 'asc');
+  const rows = await q
+    .groupBy('users.id', 'users.pseudo', 'users.activity', 'users.city')
+    .orderBy('users.pseudo', 'asc');
 
   return {
     data: rows.map((r) => ({
       id: r.id,
       pseudo: r.pseudo,
+      activity: r.activity,
+      activity_label: getActivityLabel(r.activity),
+      city: r.city,
       count: Number(r.count),
     })),
   };
 }
 
-export async function listLieuxForMap(knexDb, query) {
+export async function listLieuxForMap(knexDb, query, profileUser = null) {
   const { column, order, sort } = parseSort(query);
+  const radius = resolveMapCenter(query, profileUser);
+  if (radius?.error) {
+    const err = new Error(radius.error);
+    err.status = 400;
+    throw err;
+  }
 
   let q = knexDb('lieux')
     .select(
@@ -271,6 +304,9 @@ export async function listLieuxForMap(knexDb, query) {
     .whereNotNull('lieux.latitude')
     .whereNotNull('lieux.longitude');
   q = applyFilters(q, query);
+  if (radius) {
+    q = applyRadiusFilter(q, radius.lat, radius.lon, radius.radiusKm);
+  }
 
   const countQuery = q.clone().count({ total: '*' }).first();
   const rows = await q.orderBy(column, order).limit(MAP_MAX);
@@ -289,15 +325,25 @@ export async function listLieuxForMap(knexDb, query) {
     }
   }
 
+  const meta = {
+    total: totalNum,
+    returned: rows.length,
+    capped: totalNum > MAP_MAX,
+    max: MAP_MAX,
+    sort,
+    order,
+  };
+  if (radius) {
+    meta.radius_km = radius.radiusKm;
+    meta.radius_center = {
+      latitude: radius.lat,
+      longitude: radius.lon,
+      city: radius.cityLabel,
+    };
+  }
+
   return {
     data: rows.map((r) => formatLieuMapMarker(r, photoByLieu[r.id])),
-    meta: {
-      total: totalNum,
-      returned: rows.length,
-      capped: totalNum > MAP_MAX,
-      max: MAP_MAX,
-      sort,
-      order,
-    },
+    meta,
   };
 }

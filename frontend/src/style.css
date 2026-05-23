@@ -118,6 +118,39 @@ label {
   margin: 0 0 0.75rem;
 }
 
+.map-radius-bar {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.map-radius-toggle {
+  margin-bottom: 0.5rem;
+}
+
+.map-radius-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.map-radius-controls input[type='range'] {
+  flex: 1;
+  min-width: 120px;
+  max-width: 280px;
+}
+
+.map-radius-input {
+  width: 4.5rem;
+}
+
+.map-legend-radius {
+  color: var(--accent-soft);
+  font-size: 0.8rem;
+}
+
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -387,6 +420,26 @@ label {
 
 .legend-blacklist {
   background: #ef4444;
+}
+
+.ville-autocomplete {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.ville-autocomplete-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.ville-field {
+  flex: 1;
+  min-width: 140px;
+}
+
+.ville-field-cp {
+  flex: 0 1 120px;
 }
 
 .adresse-autocomplete {
@@ -743,6 +796,23 @@ label {
   font-size: 0.85rem;
   color: var(--muted);
   word-break: break-all;
+}
+
+.account-nav-meta {
+  font-size: 0.85rem;
+  color: var(--text);
+  margin: 0.25rem 0 0;
+}
+
+.account-completion {
+  font-size: 0.85rem;
+  color: var(--accent-soft);
+  margin: 0.35rem 0 0;
+}
+
+.contributor-badge {
+  font-weight: 600;
+  color: #81c784;
 }
 
 .account-nav a.router-link-active {

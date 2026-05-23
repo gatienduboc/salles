@@ -2,8 +2,10 @@ import bcrypt from 'bcrypt';
 import fs from 'fs/promises';
 import path from 'path';
 import { config } from '../config/index.js';
-import { geocodeLieuIfNeeded } from './geocoding.js';
+import { geocodeLieuIfNeeded, geocodeProviderCity } from './geocoding.js';
 import { listLieux } from './lieux.js';
+import { getActivityLabel, maskSiret, pickProfileBody, validateSiret } from './userProfile.js';
+import { PROVIDER_ACTIVITIES } from '../constants/providerActivities.js';
 
 const BULK_MAX = 50;
 const BULK_PATCH_KEYS = ['type', 'auteur_id'];
@@ -110,7 +112,11 @@ export async function listAdminUsers(knexDb, query) {
   };
 }
 
-export async function createAdminUser(knexDb, { email, password, pseudo }) {
+export async function createAdminUser(
+  knexDb,
+  { email, password, pseudo, activity, city },
+  options = {}
+) {
   const normalized = email.toLowerCase();
   const existing = await knexDb('users').where({ email: normalized }).first();
   if (existing) {
@@ -118,6 +124,9 @@ export async function createAdminUser(knexDb, { email, password, pseudo }) {
     err.status = 409;
     throw err;
   }
+  const act = PROVIDER_ACTIVITIES.includes(activity) ? activity : 'autre';
+  const cityTrim = city?.trim() || 'Non renseignée';
+  const geo = await geocodeProviderCity(cityTrim, null, options);
   const role = normalized === config.adminEmail ? 'admin' : 'user';
   const password_hash = await bcrypt.hash(password, 10);
   const [id] = await knexDb('users').insert({
@@ -125,6 +134,13 @@ export async function createAdminUser(knexDb, { email, password, pseudo }) {
     password_hash,
     pseudo,
     role,
+    activity: act,
+    city: geo.error ? cityTrim : geo.city,
+    postal_code: geo.postal_code || null,
+    city_latitude: geo.city_latitude ?? null,
+    city_longitude: geo.city_longitude ?? null,
+    city_geocoded_at: geo.city_geocoded_at ?? null,
+    profile_updated_at: knexDb.fn.now(),
   });
   return knexDb('users').where({ id }).first();
 }
@@ -137,7 +153,15 @@ export async function updateAdminUser(knexDb, id, data, actingUser) {
     throw err;
   }
 
-  const patch = {};
+  const patch = pickProfileBody(data);
+  if (patch.siret !== undefined) {
+    const siretErr = validateSiret(patch.siret);
+    if (siretErr) {
+      const err = new Error(siretErr);
+      err.status = 400;
+      throw err;
+    }
+  }
   if (data.pseudo !== undefined) patch.pseudo = data.pseudo;
   if (data.email !== undefined) {
     const email = data.email.toLowerCase();
@@ -159,6 +183,7 @@ export async function updateAdminUser(knexDb, id, data, actingUser) {
   }
 
   if (Object.keys(patch).length) {
+    patch.profile_updated_at = knexDb.fn.now();
     await knexDb('users').where({ id }).update(patch);
   }
   return knexDb('users').where({ id }).first();
@@ -292,6 +317,10 @@ export async function formatAdminUserRow(knexDb, user) {
     email: user.email,
     pseudo: user.pseudo,
     role: user.role,
+    activity: user.activity,
+    activity_label: getActivityLabel(user.activity),
+    city: user.city,
+    siret_masked: maskSiret(user.siret),
     created_at: user.created_at,
     lieux_count: Number(count),
   };

@@ -26,8 +26,11 @@ Arrêt : `make dev-down`
 
 ```bash
 make dev-up
+docker compose -f docker-compose.dev.yml exec backend npx knex migrate:latest
 docker compose -f docker-compose.dev.yml exec backend npx knex seed:run
 ```
+
+Si le profil renvoie une erreur du type `Unknown column 'city_latitude'`, la migration `010_user_city_geocode` n’a pas été appliquée : relancer `knex migrate:latest` ci-dessus.
 
 Compte démo : `demo@salles.local` / `password123`
 

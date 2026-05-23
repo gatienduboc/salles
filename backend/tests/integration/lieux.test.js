@@ -61,6 +61,69 @@ describe('Lieux API', () => {
     const filtered = await request(app).get('/lieux').query({ auteur_id: u2.id });
     expect(filtered.body.data.some((l) => l.nom === 'Salle C')).toBe(true);
     expect(filtered.body.data.every((l) => l.auteur.pseudo === 'DJ Beta')).toBe(true);
+    expect(filtered.body.data[0].auteur.activity_label).toBeDefined();
+  });
+
+  it('GET /lieux/map filtre par radius_km autour du profil', async () => {
+    const { user, token } = await createUser({
+      city: 'Lyon',
+      city_latitude: 45.764,
+      city_longitude: 4.8357,
+      city_geocoded_at: new Date(),
+      intervention_radius_km: 50,
+    });
+    await createLieu(user.id, {
+      nom: 'Proche Lyon',
+      adresse: 'Lyon',
+      latitude: 45.77,
+      longitude: 4.84,
+    });
+    await createLieu(user.id, {
+      nom: 'Loin Paris',
+      adresse: 'Paris',
+      latitude: 48.8566,
+      longitude: 2.3522,
+    });
+
+    const res = await request(app)
+      .get('/lieux/map')
+      .query({ radius_km: 30 })
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.some((l) => l.nom === 'Proche Lyon')).toBe(true);
+    expect(res.body.data.some((l) => l.nom === 'Loin Paris')).toBe(false);
+    expect(res.body.meta.radius_km).toBe(30);
+  });
+
+  it('GET /lieux liste filtre par radius_km comme la carte', async () => {
+    const { user, token } = await createUser({
+      city: 'Lyon',
+      city_latitude: 45.764,
+      city_longitude: 4.8357,
+      city_geocoded_at: new Date(),
+    });
+    await createLieu(user.id, {
+      nom: 'Proche Lyon liste',
+      adresse: 'Lyon',
+      latitude: 45.77,
+      longitude: 4.84,
+    });
+    await createLieu(user.id, {
+      nom: 'Loin Paris liste',
+      adresse: 'Paris',
+      latitude: 48.8566,
+      longitude: 2.3522,
+    });
+
+    const res = await request(app)
+      .get('/lieux')
+      .query({ radius_km: 30, center_lat: 45.764, center_lon: 4.8357 })
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.some((l) => l.nom === 'Proche Lyon liste')).toBe(true);
+    expect(res.body.data.some((l) => l.nom === 'Loin Paris liste')).toBe(false);
+    expect(res.body.meta.radius_km).toBe(30);
+    expect(res.body.meta.radius_center.latitude).toBeCloseTo(45.764, 2);
   });
 
   it('GET /address/suggest propose des adresses', async () => {

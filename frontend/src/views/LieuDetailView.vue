@@ -61,8 +61,14 @@ onMounted(load);
     <div class="card detail-grid">
       <dl>
         <template v-if="lieu.auteur?.pseudo">
-          <dt>Auteur</dt>
-          <dd>{{ lieu.auteur.pseudo }}</dd>
+          <dt>Contributeur</dt>
+          <dd>
+            <span v-if="lieu.auteur.activity_label" class="contributor-badge">{{
+              lieu.auteur.activity_label
+            }}</span>
+            <span v-if="lieu.auteur.city"> · {{ lieu.auteur.city }}</span>
+            <span> — {{ lieu.auteur.pseudo }}</span>
+          </dd>
         </template>
         <template v-if="lieu.nom_gerant">
           <dt>Gérant</dt>
